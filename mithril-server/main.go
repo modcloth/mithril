@@ -9,11 +9,14 @@ import (
 )
 
 var (
-	addr = flag.String("a", ":8371", "Server address")
+	addr    = flag.String("a", ":8371", "Mithril server address")
+	amqpUri = flag.String("u", "amqp://guest:guest@localhost:5672", "AMQP Server URI")
 )
 
 func main() {
-	http.Handle("/", mithril.NewServer())
+	server := mithril.NewServer()
+	server.AddHandler(mithril.NewAMQPHandler(*amqpUri))
+	http.Handle("/", server)
 	log.Println("Serving on", *addr)
 	log.Fatal(http.ListenAndServe(*addr, nil))
 }
