@@ -5,12 +5,16 @@ import (
 	"log"
 	"net/http"
 
+	_ "net/http/pprof"
+
 	"github.com/modcloth-labs/mithril"
 )
 
 var (
-	addr    = flag.String("a", ":8371", "Mithril server address")
-	amqpUri = flag.String("u", "amqp://guest:guest@localhost:5672", "AMQP Server URI")
+	addr = flag.String("a",
+		":8371", "Mithril server address")
+	amqpUri = flag.String("u",
+		"amqp://guest:guest@localhost:5672", "AMQP Server URI")
 )
 
 func main() {
