@@ -14,7 +14,7 @@ var (
 	pingMsg = &amqp.Publishing{Body: []byte("z")}
 )
 
-type AMQPAdaptedRequest struct {
+type amqpAdaptedRequest struct {
 	Publishing *amqp.Publishing
 	Exchange   string
 	RoutingKey string
@@ -35,7 +35,7 @@ func NewAMQPHandler(amqpUri string) *AMQPHandler {
 
 func (me *AMQPHandler) HandleRequest(req Request) error {
 	var (
-		amqpReq *AMQPAdaptedRequest
+		amqpReq *amqpAdaptedRequest
 		err     error
 	)
 
@@ -107,7 +107,7 @@ func (me *AMQPHandler) publishPing() error {
 	return me.pingChannel.Publish("", "mithril_pings", false, false, *pingMsg)
 }
 
-func (me *AMQPHandler) adaptHttpRequest(req Request) (*AMQPAdaptedRequest, error) {
+func (me *AMQPHandler) adaptHttpRequest(req Request) (*amqpAdaptedRequest, error) {
 	var (
 		body      []byte
 		err       error
@@ -137,7 +137,7 @@ func (me *AMQPHandler) adaptHttpRequest(req Request) (*AMQPAdaptedRequest, error
 		immediate = true
 	}
 
-	adaptedReq := &AMQPAdaptedRequest{
+	adaptedReq := &amqpAdaptedRequest{
 		Publishing: &amqp.Publishing{
 			MessageId:   req.Headers().Get("Message-ID"),
 			Timestamp:   time.Now().UTC(), // FIXME parse "Date" header?
@@ -154,7 +154,7 @@ func (me *AMQPHandler) adaptHttpRequest(req Request) (*AMQPAdaptedRequest, error
 	return adaptedReq, nil
 }
 
-func (me *AMQPHandler) publishAdaptedRequest(amqpReq *AMQPAdaptedRequest) error {
+func (me *AMQPHandler) publishAdaptedRequest(amqpReq *amqpAdaptedRequest) error {
 	log.Printf("Publishing adapted HTTP request %+v", amqpReq)
 
 	return me.handlingChannel.Publish(amqpReq.Exchange,
