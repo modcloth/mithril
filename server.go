@@ -8,13 +8,28 @@ import (
 )
 
 const faviconBase64 = `
-iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAABGdBTUEAALGPC/xhBQAAAA
-FzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpR
-PAAAAAlQTFRFAAAAaycz////cJGUEAAAAAF0Uk5TAEDm2GYAAAABYktHRAJmC3xkAAAAPE
-lEQVQI1zWMsQ0AMAjDzNAT+AeG7q0E/79SqMRiJVYUViBoZhKyA8QArYD74O5xH13F3Tg9
-jlXQLF9XPG8QCLmv6srMAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDEzLTA1LTAzVDIyOjI1Oj
-AzLTA0OjAwA+emcwAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxMy0wNS0wM1QyMjoyNTowMi0w
-NDowMNTNFXsAAAAASUVORK5CYII=
+AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAABILAAASCw
+AAAAAAAAAAAAD//////////zMna/8zJ2v/Mydr/zMna/8zJ2v/////////////////////
+/////////////////////////////////zMna/8zJ2v/Mydr/zMna/8zJ2v/Mydr/zMna/
+///////////////////////////////////////////zMna/8zJ2v/Mydr////////////
+/////zMna/8zJ2v/Mydr//////////////////////////////////////8zJ2v/Mydr//
+//////////////////////////Mydr/zMna///////////////////////////////////
+////////////////////Mydr/zMna////////////zMna/8zJ2v///////////8zJ2v/My
+dr//////////////////////////////////////8zJ2v/Mydr//////8zJ2v/Mydr////
+//8zJ2v/Mydr/////////////////////////////////////////////////zMna/8zJ2
+v/Mydr/zMna/8zJ2v/Mydr////////////////////////////////////////////////
+//////8zJ2v/Mydr/zMna/8zJ2v/Mydr/zMna/////////////////////////////////
+////////////////8zJ2v/Mydr//////8zJ2v/Mydr//////8zJ2v/Mydr////////////
+////////////////////////////////Mydr////////////Mydr/zMna////////////z
+Mna////////////////////////////////////////////zMna////////////zMna/8z
+J2v///////////8zJ2v/////////////////////////////////////////////////My
+dr/zMna/8zJ2v/Mydr/zMna/8zJ2v/////////////////////////////////////////
+////////////////////////Mydr/zMna/////////////////////////////////////
+//Mydr/zMna/8zJ2v//////////////////////zMna/8zJ2v//////zMna/8zJ2v/Mydr
+/zMna/8zJ2v///////////8zJ2v/Mydr/zMna/8zJ2v/Mydr/zMna/8zJ2v/Mydr/zMna/
+8zJ2v/Mydr/zMna/8zJ2v/Mydr/zMna////////////zMna/8zJ2v/Mydr/zMna/8zJ2v/
+//////////////////////////////////////////8zJ2v/AAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
 `
 
 var faviconBytes []byte
@@ -91,7 +106,7 @@ func (me *Server) respond(status int, body []byte, w http.ResponseWriter) {
 }
 
 func (me *Server) respondFavicon(status int, w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Content-Type", "image/vnd.microsoft.icon")
 	w.WriteHeader(status)
 	w.Write(faviconBytes)
 }
