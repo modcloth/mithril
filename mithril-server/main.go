@@ -39,7 +39,7 @@ func main() {
 	}
 
 	if err := pipeline.Init(); err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to initialize handler pipeline: %q", err)
 	}
 
 	server.SetHandlerPipeline(pipeline)

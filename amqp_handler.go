@@ -41,6 +41,8 @@ func (me *AMQPHandler) Init() error {
 		return err
 	}
 
+	log.Println("AMQP handler initialized")
+
 	if me.nextHandler != nil {
 		return me.nextHandler.Init()
 	}

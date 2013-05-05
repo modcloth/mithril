@@ -34,6 +34,8 @@ func (me *PostgreSQLHandler) Init() error {
 		return err
 	}
 
+	log.Println("PostgreSQL handler initialized")
+
 	if me.nextHandler != nil {
 		return me.nextHandler.Init()
 	}
@@ -49,8 +51,8 @@ func (me *PostgreSQLHandler) HandleRequest(req Request) error {
 	}
 
 	log.Println("PostgreSQLHandler not really handling request")
-	if _, err = me.db.Query("SELECT now()"); err != nil {
-		log.Println(err)
+	if err := me.selectNow(); err != nil {
+		return err
 	}
 
 	if me.nextHandler != nil {
@@ -69,7 +71,26 @@ func (me *PostgreSQLHandler) ensureConnected() error {
 }
 
 func (me *PostgreSQLHandler) isConnected() bool {
-	return me.db != nil
+	if me.db == nil {
+		return false
+	}
+
+	if me.selectNow() != nil {
+		return false
+	}
+
+	return true
+}
+
+func (me *PostgreSQLHandler) selectNow() error {
+	_, err := me.db.Query("SELECT now()")
+
+	if err != nil {
+		log.Println("PostgreSQL failed to execute 'SELECT now()':", err)
+		log.Println("Is PostgreSQL running?")
+	}
+
+	return err
 }
 
 func (me *PostgreSQLHandler) establishConnection() error {
@@ -88,7 +109,7 @@ func (me *PostgreSQLHandler) establishConnection() error {
 	}
 
 	me.db = db
-	return nil
+	return me.selectNow()
 }
 
 func (me *PostgreSQLHandler) ensureSchemaPresent() error {
