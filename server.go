@@ -24,15 +24,15 @@ func init() {
 }
 
 type Server struct {
-	handlers []Handler
+	handlerPipeline Handler
 }
 
 func NewServer() *Server {
 	return &Server{}
 }
 
-func (me *Server) AddHandler(handler Handler) {
-	me.handlers = append(me.handlers, handler)
+func (me *Server) SetHandlerPipeline(handler Handler) {
+	me.handlerPipeline = handler
 }
 
 func (me *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -65,13 +65,10 @@ func (me *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, handler := range me.handlers {
-		err = handler.HandleRequest(req)
-		if err != nil {
-			status = http.StatusInternalServerError
-			me.respondErr(err, status, w)
-			return
-		}
+	if err = me.handlerPipeline.HandleRequest(req); err != nil {
+		status = http.StatusInternalServerError
+		me.respondErr(err, status, w)
+		return
 	}
 
 	status = http.StatusNoContent

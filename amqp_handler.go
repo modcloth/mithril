@@ -10,10 +10,6 @@ import (
 	"github.com/streadway/amqp"
 )
 
-var (
-	pingMsg = &amqp.Publishing{Body: []byte("z")}
-)
-
 type amqpAdaptedRequest struct {
 	Publishing *amqp.Publishing
 	Exchange   string
@@ -25,12 +21,35 @@ type amqpAdaptedRequest struct {
 type AMQPHandler struct {
 	amqpUri         string
 	amqpConn        *amqp.Connection
-	pingChannel     *amqp.Channel
 	handlingChannel *amqp.Channel
+	nextHandler     Handler
 }
 
-func NewAMQPHandler(amqpUri string) *AMQPHandler {
-	return &AMQPHandler{amqpUri: amqpUri}
+func NewAMQPHandler(amqpUri string, next Handler) *AMQPHandler {
+	amqpHandler := &AMQPHandler{
+		amqpUri: amqpUri,
+	}
+
+	amqpHandler.SetNextHandler(next)
+	return amqpHandler
+}
+
+func (me *AMQPHandler) Init() error {
+	var err error
+
+	if err = me.establishConnection(); err != nil {
+		return err
+	}
+
+	if me.nextHandler != nil {
+		return me.nextHandler.Init()
+	}
+
+	return nil
+}
+
+func (me *AMQPHandler) SetNextHandler(handler Handler) {
+	me.nextHandler = handler
 }
 
 func (me *AMQPHandler) HandleRequest(req Request) error {
@@ -39,7 +58,7 @@ func (me *AMQPHandler) HandleRequest(req Request) error {
 		err     error
 	)
 
-	if err = me.ensureConnected(); err != nil {
+	if err = me.establishConnection(); err != nil {
 		return err
 	}
 
@@ -48,38 +67,22 @@ func (me *AMQPHandler) HandleRequest(req Request) error {
 	}
 
 	if err = me.publishAdaptedRequest(amqpReq); err != nil {
+		log.Println("Failed to publish request:", err)
 		return err
 	}
+
+	defer me.disconnect()
 
 	return nil
 }
 
-func (me *AMQPHandler) ensureConnected() error {
-	if me.isConnected() {
-		return nil
-	}
-
-	return me.establishConnection()
-}
-
 func (me *AMQPHandler) establishConnection() error {
-	if me.amqpConn != nil {
-		me.amqpConn.Close()
-	}
-
 	conn, err := amqp.Dial(me.amqpUri)
 	if err != nil {
 		return err
 	}
 
 	me.amqpConn = conn
-
-	pingChannel, err := me.amqpConn.Channel()
-	if err != nil {
-		return err
-	}
-
-	me.pingChannel = pingChannel
 
 	handlingChannel, err := me.amqpConn.Channel()
 	if err != nil {
@@ -90,21 +93,16 @@ func (me *AMQPHandler) establishConnection() error {
 	return nil
 }
 
-func (me *AMQPHandler) isConnected() bool {
-	if me.amqpConn == nil {
-		return false
+func (me *AMQPHandler) disconnect() {
+	if me.handlingChannel != nil {
+		me.handlingChannel.Close()
+		me.handlingChannel = nil
 	}
 
-	if me.pingChannel == nil {
-		return false
+	if me.amqpConn != nil {
+		me.amqpConn.Close()
+		me.amqpConn = nil
 	}
-
-	return me.publishPing() == nil
-}
-
-func (me *AMQPHandler) publishPing() error {
-	log.Println("Pinging RabbitMQ")
-	return me.pingChannel.Publish("", "mithril_pings", false, false, *pingMsg)
 }
 
 func (me *AMQPHandler) adaptHttpRequest(req Request) (*amqpAdaptedRequest, error) {

@@ -29,13 +29,20 @@ func main() {
 	}
 	flag.Parse()
 
+	var pipeline mithril.Handler
+
 	server := mithril.NewServer()
+	pipeline = mithril.NewAMQPHandler(*amqpUri, nil)
 
 	if *enablePg {
-		server.AddHandler(mithril.NewPostgreSQLHandler(*pgUri))
+		pipeline = mithril.NewPostgreSQLHandler(*pgUri, pipeline)
 	}
 
-	server.AddHandler(mithril.NewAMQPHandler(*amqpUri))
+	if err := pipeline.Init(); err != nil {
+		log.Fatal(err)
+	}
+
+	server.SetHandlerPipeline(pipeline)
 	http.Handle("/", server)
 
 	log.Println("Serving on", *addr)
