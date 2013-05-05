@@ -3,6 +3,8 @@ language: go
 env:
   global:
   - GOPATH_DEST=$HOME/gopath/src/github.com/modcloth-labs
+services:
+- rabbitmq
 install:
 - mkdir -p $GOPATH_DEST
 - ln -sv $TRAVIS_BUILD_DIR $GOPATH_DEST/mithril
