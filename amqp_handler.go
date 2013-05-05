@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 
@@ -54,7 +55,7 @@ func (me *AMQPHandler) SetNextHandler(handler Handler) {
 	me.nextHandler = handler
 }
 
-func (me *AMQPHandler) HandleRequest(req Request) error {
+func (me *AMQPHandler) HandleRequest(req *http.Request) error {
 	var (
 		amqpReq *amqpAdaptedRequest
 		err     error
@@ -107,7 +108,7 @@ func (me *AMQPHandler) disconnect() {
 	}
 }
 
-func (me *AMQPHandler) adaptHttpRequest(req Request) (*amqpAdaptedRequest, error) {
+func (me *AMQPHandler) adaptHttpRequest(req *http.Request) (*amqpAdaptedRequest, error) {
 	var (
 		body      []byte
 		err       error
@@ -117,18 +118,18 @@ func (me *AMQPHandler) adaptHttpRequest(req Request) (*amqpAdaptedRequest, error
 
 	log.Printf("Adapting HTTP request %q", req)
 
-	if body, err = ioutil.ReadAll(req.Body()); err != nil {
+	if body, err = ioutil.ReadAll(req.Body); err != nil {
 		return nil, err
 	}
 
-	reqPath := req.Path()
+	reqPath := req.URL.Path
 	pathParts := strings.Split(strings.TrimLeft(reqPath, "/"), "/")
 	if len(pathParts) < 2 || len(pathParts[0]) == 0 || len(pathParts[1]) == 0 {
 		return nil, fmt.Errorf("Missing required exchange and/or routing key "+
 			"in PATH_INFO: %+v", reqPath)
 	}
 
-	reqQuery := req.Query()
+	reqQuery := req.URL.Query()
 	if m := reqQuery.Get("m"); m == "1" {
 		mandatory = true
 	}
@@ -139,10 +140,10 @@ func (me *AMQPHandler) adaptHttpRequest(req Request) (*amqpAdaptedRequest, error
 
 	adaptedReq := &amqpAdaptedRequest{
 		Publishing: &amqp.Publishing{
-			MessageId:   req.Headers().Get("Message-ID"),
+			MessageId:   req.Header.Get("Message-ID"),
 			Timestamp:   time.Now().UTC(), // FIXME parse "Date" header?
-			AppId:       req.Headers().Get("From"),
-			ContentType: req.Headers().Get("Content-Type"),
+			AppId:       req.Header.Get("From"),
+			ContentType: req.Header.Get("Content-Type"),
 			Body:        body,
 		},
 		Exchange:   pathParts[0],

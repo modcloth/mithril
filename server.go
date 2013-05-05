@@ -54,7 +54,6 @@ func (me *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var (
 		status int
 		err    error
-		req    Request
 	)
 
 	defer func() {
@@ -74,13 +73,7 @@ func (me *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req, err = me.parseRequest(r); err != nil {
-		status = http.StatusBadRequest
-		me.respondErr(err, status, w)
-		return
-	}
-
-	if err = me.handlerPipeline.HandleRequest(req); err != nil {
+	if err = me.handlerPipeline.HandleRequest(r); err != nil {
 		status = http.StatusInternalServerError
 		me.respondErr(err, status, w)
 		return
@@ -88,10 +81,6 @@ func (me *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	status = http.StatusNoContent
 	me.respond(status, []byte(""), w)
-}
-
-func (me *Server) parseRequest(r *http.Request) (Request, error) {
-	return &HTTPRequestWrapper{Req: r}, nil
 }
 
 func (me *Server) respondErr(err error, status int, w http.ResponseWriter) {

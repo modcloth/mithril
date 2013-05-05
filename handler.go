@@ -1,7 +1,11 @@
 package mithril
 
+import (
+	"net/http"
+)
+
 type Handler interface {
-	HandleRequest(Request) error
+	HandleRequest(*http.Request) error
 	Init() error
 	SetNextHandler(Handler)
 }
