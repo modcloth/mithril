@@ -1,0 +1,50 @@
+#!/usr/bin/env ruby
+
+require 'minitest/autorun'
+require 'net/http'
+require 'uri'
+
+class ServerRunner
+  def initialize
+    @server_binary = "#{ENV['GOPATH'].split(/:/).first}/bin/mithril-server"
+    if !File.exist?(@server_binary)
+      raise "Can't locate `mithril-server` binary! " <<
+            "(it's not here: #{@server_binary.inspect})"
+    end
+  end
+
+  def start(options = {})
+    addr = options[:port] ? ":#{options[:port]}" : ENV['ADDR']
+    $stderr.puts "Starting mithril server with address #{addr}"
+    @server_pid = Process.spawn("#{@server_binary} -a #{addr}")
+    sleep Float(ENV['MITHRIL_STARTUP_SLEEP'] || 2.0)
+  end
+
+  def stop
+    $stderr.puts 'Stopping mithril server'
+    if @server_pid
+      Process.kill('TERM', @server_pid)
+    end
+  end
+end
+
+$server_runner = ServerRunner.new
+
+at_exit do
+  $server_runner.stop
+end
+
+describe 'mithril server' do
+  describe 'when the server starts up' do
+    before do
+      @port = rand(9449..9500)
+      $server_runner.start(port: @port)
+    end
+
+    after { $server_runner.stop }
+
+    it 'listens on the specified port' do
+      Net::HTTP.get('localhost', '/foop/fwap', @port)
+    end
+  end
+end
