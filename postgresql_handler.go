@@ -9,7 +9,27 @@ import (
 )
 
 var (
-	dbIsNil = fmt.Errorf("PostgreSQL handler database is nil!")
+	dbIsNil      = fmt.Errorf("PostgreSQL handler database is nil!")
+	pgMigrations = map[string][]string{
+		"20120505000000": {`
+			CREATE TABLE IF NOT EXISTS mithril_requests (
+				id serial PRIMARY KEY,
+				message_id character varying(128) NOT NULL,
+				created_at timestamp without time zone NOT NULL,
+				app_id character varying(128) NOT NULL,
+				content_type character varying(64) NOT NULL,
+				exchange character varying(256) NOT NULL,
+				routing_key character varying(256) NOT NULL,
+				mandatory boolean NOT NULL,
+				immediate boolean NOT NULL,
+				body_bytes text NOT NULL
+			);
+		`,
+			`CREATE INDEX mithril_app_ids ON mithril_requests (app_id);`,
+			`CREATE INDEX mithril_exchanges ON mithril_requests (exchange);`,
+			`CREATE INDEX mithril_routing_keys ON mithril_requests (routing_key);`,
+		},
+	}
 )
 
 type PostgreSQLHandler struct {
@@ -146,54 +166,14 @@ func (me *PostgreSQLHandler) establishConnection() error {
 }
 
 func (me *PostgreSQLHandler) ensureSchemaPresent() error {
-	// TODO this should probably delegate to some kind
-	// of schema-checking thingydoo, maybe even with fancy
-	// pants migration gadgetry.
-
 	if me.db == nil {
 		return dbIsNil
 	}
 
-	var (
-		r   sql.Result
-		err error
-	)
-
-	r, err = me.db.Exec(`
-		CREATE TABLE IF NOT EXISTS mithril_requests (
-			id serial PRIMARY KEY,
-			message_id character varying(128) NOT NULL,
-			created_at timestamp without time zone NOT NULL,
-			app_id character varying(128) NOT NULL,
-			content_type character varying(64) NOT NULL,
-			exchange character varying(256) NOT NULL,
-			routing_key character varying(256) NOT NULL,
-			mandatory boolean NOT NULL,
-			immediate boolean NOT NULL,
-			body_bytes text NOT NULL
-		);
-	`)
-
-	log.Printf("Table ensuring query result=%+v, err=%+v", r, err)
-	if err != nil {
+	ensurer := newPgSchemaEnsurer(me.db, "mithril_schema_migrations")
+	if err := ensurer.init(); err != nil {
 		return err
 	}
 
-	// XXX kinda don't care if these fail, given the hackiness of the
-	// situation.  See above comment regarding using a real thing to do real
-	// things.
-	me.db.Exec(`
-		CREATE INDEX mr_app_ids
-		ON mithril_requests (app_id);
-	`)
-	me.db.Exec(`
-		CREATE INDEX mr_exchanges
-		ON mithril_requests (exchange);
-	`)
-	me.db.Exec(`
-		CREATE INDEX mr_routing_keys
-		ON mithril_requests (routing_key);
-	`)
-
-	return nil
+	return ensurer.migrate(pgMigrations)
 }
