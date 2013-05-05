@@ -1,12 +1,7 @@
 package mithril
 
 import (
-	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
-	"strings"
-	"time"
 
 	"github.com/streadway/amqp"
 )
@@ -55,7 +50,7 @@ func (me *AMQPHandler) SetNextHandler(handler Handler) {
 	me.nextHandler = handler
 }
 
-func (me *AMQPHandler) HandleRequest(req *http.Request) error {
+func (me *AMQPHandler) HandleRequest(req *FancyRequest) error {
 	var (
 		amqpReq *amqpAdaptedRequest
 		err     error
@@ -65,9 +60,7 @@ func (me *AMQPHandler) HandleRequest(req *http.Request) error {
 		return err
 	}
 
-	if amqpReq, err = me.adaptHttpRequest(req); err != nil {
-		return err
-	}
+	amqpReq = me.adaptHttpRequest(req)
 
 	if err = me.publishAdaptedRequest(amqpReq); err != nil {
 		log.Println("Failed to publish request:", err)
@@ -108,51 +101,20 @@ func (me *AMQPHandler) disconnect() {
 	}
 }
 
-func (me *AMQPHandler) adaptHttpRequest(req *http.Request) (*amqpAdaptedRequest, error) {
-	var (
-		body      []byte
-		err       error
-		mandatory bool
-		immediate bool
-	)
-
-	log.Printf("Adapting HTTP request %q", req)
-
-	if body, err = ioutil.ReadAll(req.Body); err != nil {
-		return nil, err
-	}
-
-	reqPath := req.URL.Path
-	pathParts := strings.Split(strings.TrimLeft(reqPath, "/"), "/")
-	if len(pathParts) < 2 || len(pathParts[0]) == 0 || len(pathParts[1]) == 0 {
-		return nil, fmt.Errorf("Missing required exchange and/or routing key "+
-			"in PATH_INFO: %+v", reqPath)
-	}
-
-	reqQuery := req.URL.Query()
-	if m := reqQuery.Get("m"); m == "1" {
-		mandatory = true
-	}
-
-	if i := reqQuery.Get("i"); i == "1" {
-		immediate = true
-	}
-
-	adaptedReq := &amqpAdaptedRequest{
+func (me *AMQPHandler) adaptHttpRequest(req *FancyRequest) *amqpAdaptedRequest {
+	return &amqpAdaptedRequest{
 		Publishing: &amqp.Publishing{
-			MessageId:   req.Header.Get("Message-ID"),
-			Timestamp:   time.Now().UTC(), // FIXME parse "Date" header?
-			AppId:       req.Header.Get("From"),
-			ContentType: req.Header.Get("Content-Type"),
-			Body:        body,
+			MessageId:   req.MessageId,
+			Timestamp:   req.Timestamp,
+			AppId:       req.AppId,
+			ContentType: req.ContentType,
+			Body:        req.BodyBytes,
 		},
-		Exchange:   pathParts[0],
-		RoutingKey: pathParts[1],
-		Mandatory:  mandatory,
-		Immediate:  immediate,
+		Exchange:   req.Exchange,
+		RoutingKey: req.RoutingKey,
+		Mandatory:  req.Mandatory,
+		Immediate:  req.Immediate,
 	}
-
-	return adaptedReq, nil
 }
 
 func (me *AMQPHandler) publishAdaptedRequest(amqpReq *amqpAdaptedRequest) error {

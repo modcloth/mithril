@@ -1,11 +1,7 @@
 package mithril
 
-import (
-	"net/http"
-)
-
 type Handler interface {
-	HandleRequest(*http.Request) error
+	HandleRequest(*FancyRequest) error
 	Init() error
 	SetNextHandler(Handler)
 }

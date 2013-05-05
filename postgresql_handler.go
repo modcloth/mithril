@@ -3,7 +3,6 @@ package mithril
 import (
 	"database/sql"
 	"log"
-	"net/http"
 
 	"github.com/lib/pq"
 )
@@ -44,7 +43,7 @@ func (me *PostgreSQLHandler) Init() error {
 	return nil
 }
 
-func (me *PostgreSQLHandler) HandleRequest(req *http.Request) error {
+func (me *PostgreSQLHandler) HandleRequest(req *FancyRequest) error {
 	log.Println("PostgreSQLHandler not really handling request")
 
 	if me.nextHandler != nil {

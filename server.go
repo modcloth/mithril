@@ -73,7 +73,14 @@ func (me *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = me.handlerPipeline.HandleRequest(r); err != nil {
+	fReq, err := NewFancyRequest(r)
+	if err != nil {
+		status = http.StatusBadRequest
+		me.respondErr(err, status, w)
+		return
+	}
+
+	if err = me.handlerPipeline.HandleRequest(fReq); err != nil {
 		status = http.StatusInternalServerError
 		me.respondErr(err, status, w)
 		return
