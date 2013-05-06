@@ -116,18 +116,10 @@ end
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 SUITE_LOAD_START = Time.now.utc.strftime('%Y%m%d%H%M%S')
-PSQL_USER = ENV['TRAVIS'] ? 'postgres' : ENV['USER']
+PSQL_USER = ENV['MITHRIL_PG_USER'] || ENV['USER']
+PG_URI = ENV['MITHRIL_PG_URI'] || 'postgres://localhost/mithril_test?sslmode=disable'
+PG_DB_NAME = ENV['MITHRIL_PG_DB_NAME'] || 'mithril_test'
 
-if ENV['TRAVIS']
-  PG_URI = 'postgres://postgres@localhost?sslmode=disable'
-  PG_DB_NAME = 'postgres'
-elsif ENV['MITHRIL_PG_URI']
-  PG_URI = ENV['MITHRIL_PG_URI']
-  PG_DB_NAME = ENV['MITHRIL_PG_DB_NAME']
-else
-  PG_URI = 'postgres://localhost/mithril_test?sslmode=disable'
-  PG_DB_NAME = 'mithril_test'
-end
 $servers = {
   amqp_only: ServerRunner.new(
     port: rand(9400..9449),

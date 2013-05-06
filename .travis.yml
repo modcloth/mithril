@@ -3,6 +3,9 @@ language: go
 env:
   global:
   - GOPATH_DEST=$HOME/gopath/src/github.com/modcloth-labs
+  - MITHRIL_PG_URI='postgres://postges@localhost?sslmode=disable'
+  - MITHRIL_PG_DB_NAME='postgres'
+  - MITHRIL_PG_USER='postgres'
 services:
 - rabbitmq
 install:
