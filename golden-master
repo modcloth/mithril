@@ -45,8 +45,23 @@ class ServerRunner
   end
 end
 
+GOLD = "\033\[33;1m"
+RESET = "\033\[0m"
+GREEN = "\033\[32m"
+RED = "\033\[31m"
+BRIGHT_GREEN = "\033\[32;1m"
+BRIGHT_RED = "\033\[31;1m"
+
 def announce!(something)
-  $stderr.puts "\033\[33;1mgolden\033\[0m: \033\[32m#{something}\033\[0m"
+  $stderr.puts "#{GOLD}golden#{RESET}: #{GREEN}#{something}#{RESET}"
+end
+
+class MiniTestReporter
+  def puts(*args)
+    args.each { |arg| announce! arg }
+  end
+
+  alias print puts
 end
 
 def run_psql(command, options = {})
@@ -201,31 +216,26 @@ def main(argv = [].freeze)
     end
   end
 
-  output = File.open('log/minitest.out', 'w')
-  MiniTest::Unit.output = output
-  exit_code = MiniTest::Unit.new.run(ARGV)
-  output.close
-  File.read('log/minitest.out').split($/).each do |line|
-    announce! line
-  end
+  MiniTest::Unit.output = MiniTestReporter.new
+  exit_code = MiniTest::Unit.new.run(argv)
 
   if exit_code == 0
     $stderr.puts <<-EOF.gsub(/^ {6}/, '')
-      \033\[32;1m
+      #{BRIGHT_GREEN}
       ____ ____ ___ _ ____ ____ ____ ____ ___ _ ____ _  _
       [__  |__|  |  | [__  |___ |__| |     |  | |  | |\\ |
       ___] |  |  |  | ___] |    |  | |___  |  | |__| | \\|
 
-      \033\[0m
+      #{RESET}
     EOF
   else
     $stderr.puts <<-EOF.gsub(/^ {6}/, '')
-      \033\[31;1m
+      #{BRIGHT_RED}
       ___  _ ____ ____ ___  ___  ____ _ _  _ ___ _  _ ____ _  _ ___
       |  \\ | [__  |__| |__] |__] |  | | |\\ |  |  |\\/| |___ |\\ |  |
       |__/ | ___] |  | |    |    |__| | | \\|  |  |  | |___ | \\|  |
 
-      \033\[0m
+      #{RESET}
     EOF
   end
 
