@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	_ "net/http/pprof"
 
@@ -20,6 +21,8 @@ var (
 	enablePgFlag = flag.Bool("pg", false, "Enable PostgreSQL handler")
 	pgUriFlag    = flag.String("pg.uri",
 		"postgres://localhost?sslmode=disable", "PostgreSQL Server URI")
+
+	pidFlag = flag.String("p", "", "PID file (only written if provided)")
 )
 
 func main() {
@@ -28,6 +31,18 @@ func main() {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
+
+	if len(*pidFlag) > 0 {
+		var (
+			f   *os.File
+			err error
+		)
+
+		if f, err = os.Create(*pidFlag); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Fprintf(f, "%d\n", os.Getpid())
+	}
 
 	var pipeline mithril.Handler
 
