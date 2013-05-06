@@ -1,50 +1,88 @@
 #!/usr/bin/env ruby
 
-require 'minitest/autorun'
+require 'fileutils'
+require 'minitest/spec'
 require 'net/http'
 require 'uri'
 
 class ServerRunner
-  def initialize
+  attr_reader :server_binary, :addr, :port
+  attr_reader :startup_sleep, :start_time, :server_pid
+
+  def initialize(options = {})
+    @start_time = options[:start] || Time.now.utc
     @server_binary = "#{ENV['GOPATH'].split(/:/).first}/bin/mithril-server"
-    if !File.exist?(@server_binary)
+    @addr = options[:port] ? ":#{options[:port]}" : ENV['ADDR']
+    @port = (options[:port] || ENV['ADDR'] || '9494').to_s.gsub(/:/, '').to_i
+    @startup_sleep = Float(
+      options[:startup_sleep] || ENV['MITHRIL_STARTUP_SLEEP'] || 1.0
+    )
+
+    if !File.exist?(server_binary)
       raise "Can't locate `mithril-server` binary! " <<
-            "(it's not here: #{@server_binary.inspect})"
+            "(it's not here: #{server_binary.inspect})"
     end
   end
 
-  def start(options = {})
-    addr = options[:port] ? ":#{options[:port]}" : ENV['ADDR']
-    $stderr.puts "Starting mithril server with address #{addr}"
-    @server_pid = Process.spawn("#{@server_binary} -a #{addr}")
+  def start
+    say "Starting mithril server with address #{addr}"
+    @server_pid = Process.spawn(
+      "#{server_binary} -a #{addr} " <<
+        ">> ./log/mithril-server-#{start_time}-#{port}.log 2>&1"
+    )
     sleep Float(ENV['MITHRIL_STARTUP_SLEEP'] || 2.0)
+    @server_pid
   end
 
   def stop
-    $stderr.puts 'Stopping mithril server'
-    if @server_pid
-      Process.kill('TERM', @server_pid)
+    say "Stopping mithril server with address #{addr}"
+    if server_pid
+      Process.kill('TERM', server_pid)
     end
+  end
+
+  private
+  def say(something)
+    $stderr.puts "\033\[33;1mgolden-master\033\[0m: " <<
+                 "\033\[32m#{something}\033\[0m"
   end
 end
 
-$server_runner = ServerRunner.new
+$servers = {
+  amqp_only: ServerRunner.new(
+    port: rand(9400..9449),
+    start: Time.now.utc,
+  ),
+  with_pg: ServerRunner.new(
+    port: rand(9450..9499),
+    start: Time.now.utc,
+    extra_args: '-pg -pg.uri="postgres://postgres@localhost?sslmode=disable"'
+  )
+}
 
-at_exit do
-  $server_runner.stop
-end
-
-describe 'mithril server' do
-  describe 'when the server starts up' do
-    before do
-      @port = rand(9449..9500)
-      $server_runner.start(port: @port)
-    end
-
-    after { $server_runner.stop }
-
+$servers.each do |server_type,server|
+  server_name = server_type.to_s.gsub(/_/, ' ')
+  describe "#{server_name} mithril server" do
     it 'listens on the specified port' do
-      Net::HTTP.get('localhost', '/foop/fwap', @port)
+      response = Net::HTTP.get('localhost', '/foop/fwap', server.port)
+      response.must_match(/^WOMP WOMP/)
     end
   end
+end
+
+if __FILE__ == $0
+  at_exit do
+    $servers.each do |_,runner|
+      runner.stop
+    end
+  end
+
+  Dir.chdir(File.expand_path('../', __FILE__)) do
+    FileUtils.mkdir_p('./log')
+    $servers.each do |_,runner|
+      runner.start
+    end
+  end
+
+  exit MiniTest::Unit.new.run(ARGV)
 end

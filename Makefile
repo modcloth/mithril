@@ -5,6 +5,7 @@ TARGETS := \
   github.com/modcloth-labs/mithril/mithril-server
 
 ADDR := :8371
+export ADDR
 
 test: build
 	go test -x $(LIBS)
@@ -22,6 +23,6 @@ serve:
 	$${GOPATH%%:*}/bin/mithril-server -a $(ADDR)
 
 golden: test
-	./golden-master $(ADDR)
+	./golden-master -v
 
 .PHONY: build deps test clean serve
