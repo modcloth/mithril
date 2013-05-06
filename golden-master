@@ -26,7 +26,7 @@ class ServerRunner
   end
 
   def start
-    say "Starting mithril server with address #{addr}"
+    announce! "Starting mithril server with address #{addr}"
     start = start_time.strftime('%Y%m%d%H%M%S')
     @server_pid = Process.spawn(
       "#{server_binary} -a #{addr} #{extra_args}" <<
@@ -37,17 +37,17 @@ class ServerRunner
   end
 
   def stop
-    say "Stopping mithril server with address #{addr}"
     if server_pid
-      Process.kill('TERM', server_pid)
+      announce! "Stopping mithril server with address #{addr} " <<
+                "(PID=#{server_pid})"
+      Process.kill(:KILL, server_pid)
     end
   end
+end
 
-  private
-  def say(something)
-    $stderr.puts "\033\[33;1mgolden-master\033\[0m: " <<
-                 "\033\[32m#{something}\033\[0m"
-  end
+def announce!(something)
+  $stderr.puts "\033\[33;1mgolden-master\033\[0m: " <<
+               "\033\[32m#{something}\033\[0m"
 end
 
 def run_psql(command, options = {})
@@ -58,8 +58,43 @@ def run_psql(command, options = {})
   return [output, $?]
 end
 
-# ---------------------------------------------------------------------------
+def post_requests(options = {})
+  path = "/#{options[:exchange] || 'foop'}/#{options[:routing_key] || 'fwap'}"
+  port = options[:port] || 8371
+  request = Net::HTTP::Post.new(path)
+  request.content_type = case options[:type]
+                         when :json
+                           'application/json'
+                         when :xml
+                           'application/xml'
+                         else
+                           'application/octet-stream'
+                         end
 
+  Integer(options[:count] || 1).times do |n|
+    response = Net::HTTP.start('localhost', port) do |http|
+      request.body = case options[:type]
+                     when :json
+                       %Q/{"flume":"sandbag #{rand}"}/
+                     when :xml
+                       %Q(<flume sandbag="#{rand}"></flume>)
+                     else
+                       %Q(\x99f\x81l\x78u\x93m\x33e\x90)
+                     end
+      http.request(request)
+    end
+
+    if response.code != '204'
+      raise "Failed POST: #{response.inspect}"
+    end
+
+    announce! "POSTed #{request.body.inspect} to #{request.path.inspect}"
+  end
+end
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+SUITE_LOAD_START = Time.now.utc.strftime('%Y%m%d%H%M%S')
 PSQL_USER = ENV['TRAVIS'] ? 'postgres' : ENV['USER']
 PG_URI = if ENV['TRAVIS']
            'postgres://postgres@localhost?sslmode=disable'
@@ -80,7 +115,7 @@ $servers = {
   )
 }
 
-# ---------------------------------------------------------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 $servers.each do |server_type,server|
   server_name = server_type.to_s.gsub(/_/, ' ')
@@ -102,23 +137,56 @@ $servers.each do |server_type,server|
 end
 
 describe 'with pg mithril server' do
+  # Having tests for the database may seem odd in a golden master/black box
+  # style test.  The reasoning here is that by ensuring the database interface,
+  # we allow for innovation in "replay clients" (plus mithril doesn't yet have
+  # its own).
   it 'ensures the `mithril_requests` table is available' do
     out = run_psql(
       '-t -c "SELECT COUNT(*) FROM mithril_requests"', user: PSQL_USER
     ).first
-    out.strip.must_match(/[0-9]/)
+    count = Integer(out.strip)
+    count.must_be :>=, 5
   end
 
   it 'tracks migrations with a schema migrations table' do
     out = run_psql(
-      '-t -c "SELECT version FROM mithril_schema_migrations ORDER BY version"',
+      '-t -c "SELECT * FROM mithril_schema_migrations"',
       user: PSQL_USER
     ).first
-    out.split($/).first.strip.must_equal '20120505000000'
+    out.split($/).first.strip.wont_be_empty
+  end
+
+  describe 'after requests have been POSTed' do
+    before do
+      run_psql(
+        %Q{-t -c "DELETE FROM mithril_requests
+                WHERE exchange = 'pg_exchange_#{SUITE_LOAD_START}'"},
+                user: PSQL_USER
+      )
+      post_requests(
+        port: $servers[:with_pg].port,
+        type: :json,
+        count: 5,
+        exchange: "pg_exchange_#{SUITE_LOAD_START}",
+        routing_key: 'pg.new',
+      )
+    end
+
+    it 'ensures requests can be selected by `exchange`' do
+      out = run_psql(
+        %Q{-t -c "SELECT COUNT(*)
+                FROM mithril_requests
+                WHERE exchange = 'pg_exchange_#{SUITE_LOAD_START}'"},
+                user: PSQL_USER
+      ).first
+      count = Integer(out.strip)
+      count.must_equal 5
+    end
   end
 end
 
-# ---------------------------------------------------------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 if __FILE__ == $0
   at_exit do
@@ -134,7 +202,13 @@ if __FILE__ == $0
     end
   end
 
+  output = File.open('log/minitest.out', 'w')
+  MiniTest::Unit.output = output
   exit_code = MiniTest::Unit.new.run(ARGV)
+  output.close
+  File.read('log/minitest.out').split($/).each do |line|
+    announce! line
+  end
 
   if exit_code == 0
     $stderr.puts <<-EOF.gsub(/^ {6}/, '')
