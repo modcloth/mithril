@@ -7,13 +7,14 @@ require 'uri'
 
 class ServerRunner
   attr_reader :server_binary, :addr, :port, :extra_args
-  attr_reader :startup_sleep, :start_time, :server_pid
+  attr_reader :startup_sleep, :start_time, :server_pid, :pidfile
 
   def initialize(options = {})
     @start_time = options[:start] || Time.now.utc
     @server_binary = "#{ENV['GOPATH'].split(/:/).first}/bin/mithril-server"
     @addr = options[:port] ? ":#{options[:port]}" : ENV['ADDR']
     @port = (options[:port] || ENV['ADDR'] || '9494').to_s.gsub(/:/, '').to_i
+    @pidfile = (options[:pidfile] || "mithril-server-#{@port}.pid")
     @extra_args = options[:extra_args] || ''
     @startup_sleep = Float(
       options[:startup_sleep] || ENV['MITHRIL_STARTUP_SLEEP'] || 0.5
@@ -29,7 +30,7 @@ class ServerRunner
     announce! "Starting mithril server with address #{addr}"
     start = start_time.strftime('%Y%m%d%H%M%S')
     @server_pid = Process.spawn(
-      "#{server_binary} -a #{addr} #{extra_args}" <<
+      "#{server_binary} -a #{addr} -p #{pidfile} #{extra_args}" <<
         ">> ./log/mithril-server-#{start}-#{port}.log 2>&1"
     )
     sleep @startup_sleep
@@ -37,10 +38,14 @@ class ServerRunner
   end
 
   def stop
-    if server_pid
+    real_pid = Integer(File.read(pidfile).chomp) rescue nil
+    if server_pid && real_pid
       announce! "Stopping mithril server with address #{addr} " <<
-                "(PID=#{server_pid})"
-      Process.kill(:KILL, server_pid)
+                "(shell PID=#{server_pid}, server PID=#{real_pid})"
+
+      [real_pid, server_pid].each do |pid|
+        Process.kill(:TERM, pid)
+      end
     end
   end
 end
@@ -121,10 +126,12 @@ $servers = {
   amqp_only: ServerRunner.new(
     port: rand(9400..9449),
     start: Time.now.utc,
+    pidfile: File.expand_path('../log/mithril-server-amqp-only.pid', __FILE__),
   ),
   with_pg: ServerRunner.new(
     port: rand(9450..9499),
     start: Time.now.utc,
+    pidfile: File.expand_path('../log/mithril-server-with-pg.pid', __FILE__),
     extra_args: "-pg -pg.uri='#{PG_URI}'"
   )
 }
