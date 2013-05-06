@@ -6,14 +6,19 @@ require 'net/http'
 require 'uri'
 
 class ServerRunner
-  attr_reader :server_binary, :addr, :port, :extra_args
+  attr_reader :server_binary, :addr, :port, :extra_args, :logfile
   attr_reader :startup_sleep, :start_time, :server_pid, :pidfile
 
   def initialize(options = {})
     @start_time = options[:start] || Time.now.utc
+    start = start_time.strftime('%Y%m%d%H%M%S')
     @server_binary = "#{ENV['GOPATH'].split(/:/).first}/bin/mithril-server"
     @addr = options[:port] ? ":#{options[:port]}" : ENV['ADDR']
     @port = (options[:port] || ENV['ADDR'] || '9494').to_s.gsub(/:/, '').to_i
+    @logfile = File.expand_path(
+      "../log/mithril-server-#{start}-#{port}.log",
+      __FILE__
+    )
     @pidfile = (options[:pidfile] || "mithril-server-#{@port}.pid")
     @extra_args = options[:extra_args] || ''
     @startup_sleep = Float(
@@ -28,10 +33,9 @@ class ServerRunner
 
   def start
     announce! "Starting mithril server with address #{addr}"
-    start = start_time.strftime('%Y%m%d%H%M%S')
     @server_pid = Process.spawn(
       "#{server_binary} -a #{addr} -p #{pidfile} #{extra_args}" <<
-        ">> ./log/mithril-server-#{start}-#{port}.log 2>&1"
+        ">> #{logfile} 2>&1"
     )
     sleep @startup_sleep
     @server_pid
@@ -46,6 +50,13 @@ class ServerRunner
       [real_pid, server_pid].each do |pid|
         Process.kill(:TERM, pid)
       end
+    end
+  end
+
+  def dump_log
+    announce! "Dumping #{logfile}"
+    File.read(logfile).split($/).each do |line|
+      announce! "--> #{line}"
     end
   end
 end
@@ -247,6 +258,8 @@ def main(argv = [].freeze)
 
       #{RESET}
     EOF
+
+    $servers.each { |_,server| server.dump_log }
   end
 
   exit exit_code
