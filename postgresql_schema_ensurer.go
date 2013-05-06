@@ -18,7 +18,7 @@ func newPgSchemaEnsurer(db *sql.DB, schemaTable string) *pgSchemaEnsurer {
 	}
 }
 
-func (me *pgSchemaEnsurer) init() error {
+func (me *pgSchemaEnsurer) Init() error {
 	r, err := me.db.Exec(fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (
 			version character varying(255) NOT NULL
@@ -29,7 +29,7 @@ func (me *pgSchemaEnsurer) init() error {
 	return err
 }
 
-func (me *pgSchemaEnsurer) migrate(migrations map[string][]string) error {
+func (me *pgSchemaEnsurer) Migrate(migrations map[string][]string) error {
 	for schemaVersion, sqls := range migrations {
 		if me.containsMigration(schemaVersion) {
 			continue

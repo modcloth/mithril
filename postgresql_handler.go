@@ -171,9 +171,9 @@ func (me *PostgreSQLHandler) ensureSchemaPresent() error {
 	}
 
 	ensurer := newPgSchemaEnsurer(me.db, "mithril_schema_migrations")
-	if err := ensurer.init(); err != nil {
+	if err := ensurer.Init(); err != nil {
 		return err
 	}
 
-	return ensurer.migrate(pgMigrations)
+	return ensurer.Migrate(pgMigrations)
 }
