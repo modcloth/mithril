@@ -120,7 +120,7 @@ PSQL_USER = ENV['TRAVIS'] ? 'postgres' : ENV['USER']
 
 if ENV['TRAVIS']
   PG_URI = 'postgres://postgres@localhost?sslmode=disable'
-  PG_DB_NAME = 'travis'
+  PG_DB_NAME = 'postgres'
 elsif ENV['MITHRIL_PG_URI']
   PG_URI = ENV['MITHRIL_PG_URI']
   PG_DB_NAME = ENV['MITHRIL_PG_DB_NAME']
