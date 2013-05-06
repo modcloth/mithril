@@ -6,7 +6,7 @@ require 'net/http'
 require 'uri'
 
 class ServerRunner
-  attr_reader :server_binary, :addr, :port
+  attr_reader :server_binary, :addr, :port, :extra_args
   attr_reader :startup_sleep, :start_time, :server_pid
 
   def initialize(options = {})
@@ -14,6 +14,7 @@ class ServerRunner
     @server_binary = "#{ENV['GOPATH'].split(/:/).first}/bin/mithril-server"
     @addr = options[:port] ? ":#{options[:port]}" : ENV['ADDR']
     @port = (options[:port] || ENV['ADDR'] || '9494').to_s.gsub(/:/, '').to_i
+    @extra_args = options[:extra_args] || ''
     @startup_sleep = Float(
       options[:startup_sleep] || ENV['MITHRIL_STARTUP_SLEEP'] || 0.5
     )
@@ -28,7 +29,7 @@ class ServerRunner
     say "Starting mithril server with address #{addr}"
     start = start_time.strftime('%Y%m%d%H%M%S')
     @server_pid = Process.spawn(
-      "#{server_binary} -a #{addr} " <<
+      "#{server_binary} -a #{addr} #{extra_args}" <<
         ">> ./log/mithril-server-#{start}-#{port}.log 2>&1"
     )
     sleep @startup_sleep
@@ -59,6 +60,14 @@ end
 
 # ---------------------------------------------------------------------------
 
+PSQL_USER = ENV['TRAVIS'] ? 'postgres' : ENV['USER']
+PG_URI = if ENV['TRAVIS']
+           'postgres://postgres@localhost?sslmode=disable'
+         elsif ENV['MITHRIL_PG_URI']
+           ENV['MITHRIL_PG_URI']
+         else
+           'postgres://localhost?sslmode=disable'
+         end
 $servers = {
   amqp_only: ServerRunner.new(
     port: rand(9400..9449),
@@ -67,10 +76,9 @@ $servers = {
   with_pg: ServerRunner.new(
     port: rand(9450..9499),
     start: Time.now.utc,
-    extra_args: '-pg -pg.uri="postgres://postgres@localhost?sslmode=disable"'
+    extra_args: "-pg -pg.uri='#{PG_URI}'"
   )
 }
-PSQL_USER = ENV['TRAVIS'] ? 'postgres' : ENV['USER']
 
 # ---------------------------------------------------------------------------
 
