@@ -187,7 +187,7 @@ end
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-if __FILE__ == $0
+def main(argv = [].freeze)
   at_exit do
     $servers.each do |_,runner|
       runner.stop
@@ -231,3 +231,9 @@ if __FILE__ == $0
 
   exit exit_code
 end
+
+if __FILE__ == $0
+  exit main(ARGV)
+end
+
+# vim:filetype=ruby
