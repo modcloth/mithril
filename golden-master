@@ -26,9 +26,10 @@ class ServerRunner
 
   def start
     say "Starting mithril server with address #{addr}"
+    start = start_time.strftime('%Y%m%d%H%M%S')
     @server_pid = Process.spawn(
       "#{server_binary} -a #{addr} " <<
-        ">> ./log/mithril-server-#{start_time}-#{port}.log 2>&1"
+        ">> ./log/mithril-server-#{start}-#{port}.log 2>&1"
     )
     sleep Float(ENV['MITHRIL_STARTUP_SLEEP'] || 2.0)
     @server_pid
