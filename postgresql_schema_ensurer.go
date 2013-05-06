@@ -6,6 +6,11 @@ import (
 	"log"
 )
 
+// This happens to be in the `mithril` package for now, but the intent is that
+// it will be extracted at a future date, so pretty please avoid the urge to
+// add mithril-specific crap here.  Instead, add such crap to the
+// `postgresql_handler.go` file and figure out a way to inject the special bits
+// into the stuff in here.
 type pgSchemaEnsurer struct {
 	db          *sql.DB
 	schemaTable string
