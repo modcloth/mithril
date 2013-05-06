@@ -46,8 +46,7 @@ class ServerRunner
 end
 
 def announce!(something)
-  $stderr.puts "\033\[33;1mgolden-master\033\[0m: " <<
-               "\033\[32m#{something}\033\[0m"
+  $stderr.puts "\033\[33;1mgolden\033\[0m: \033\[32m#{something}\033\[0m"
 end
 
 def run_psql(command, options = {})
