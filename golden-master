@@ -48,7 +48,7 @@ class ServerRunner
                 "(shell PID=#{server_pid}, server PID=#{real_pid})"
 
       [real_pid, server_pid].each do |pid|
-        Process.kill(:TERM, pid)
+        Process.kill(:TERM, pid) rescue nil
       end
     end
   end
