@@ -12,13 +12,13 @@ import (
 )
 
 var (
-	addr = flag.String("a", ":8371", "Mithril server address")
+	addrFlag = flag.String("a", ":8371", "Mithril server address")
 
-	amqpUri = flag.String("amqp.uri",
+	amqpUriFlag = flag.String("amqp.uri",
 		"amqp://guest:guest@localhost:5672", "AMQP Server URI")
 
-	enablePg = flag.Bool("pg", false, "Enable PostgreSQL handler")
-	pgUri    = flag.String("pg.uri",
+	enablePgFlag = flag.Bool("pg", false, "Enable PostgreSQL handler")
+	pgUriFlag    = flag.String("pg.uri",
 		"postgres://localhost?sslmode=disable", "PostgreSQL Server URI")
 )
 
@@ -32,10 +32,10 @@ func main() {
 	var pipeline mithril.Handler
 
 	server := mithril.NewServer()
-	pipeline = mithril.NewAMQPHandler(*amqpUri, nil)
+	pipeline = mithril.NewAMQPHandler(*amqpUriFlag, nil)
 
-	if *enablePg {
-		pipeline = mithril.NewPostgreSQLHandler(*pgUri, pipeline)
+	if *enablePgFlag {
+		pipeline = mithril.NewPostgreSQLHandler(*pgUriFlag, pipeline)
 	}
 
 	if err := pipeline.Init(); err != nil {
@@ -45,6 +45,6 @@ func main() {
 	server.SetHandlerPipeline(pipeline)
 	http.Handle("/", server)
 
-	log.Println("Serving on", *addr)
-	log.Fatal(http.ListenAndServe(*addr, nil))
+	log.Println("Serving on", *addrFlag)
+	log.Fatal(http.ListenAndServe(*addrFlag, nil))
 }
