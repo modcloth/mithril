@@ -70,10 +70,12 @@ class MiniTestReporter
 end
 
 def run_psql(command, options = {})
+  exe = %Q{psql -d #{PG_DB_NAME} -t -c "#{command}"}
   if options[:user]
-    command = "-U #{options[:user]} #{command}"
+    exe = %Q{psql -U #{options[:user]} -d #{PG_DB_NAME} -t -c "#{command}"}
   end
-  output = `psql #{command}`.chomp
+  announce! "psql executing: #{exe}"
+  output = `#{exe}`.chomp
   return [output, $?]
 end
 
@@ -115,13 +117,17 @@ end
 
 SUITE_LOAD_START = Time.now.utc.strftime('%Y%m%d%H%M%S')
 PSQL_USER = ENV['TRAVIS'] ? 'postgres' : ENV['USER']
-PG_URI = if ENV['TRAVIS']
-           'postgres://postgres@localhost?sslmode=disable'
-         elsif ENV['MITHRIL_PG_URI']
-           ENV['MITHRIL_PG_URI']
-         else
-           'postgres://localhost?sslmode=disable'
-         end
+
+if ENV['TRAVIS']
+  PG_URI = 'postgres://postgres@localhost?sslmode=disable'
+  PG_DB_NAME = 'travis'
+elsif ENV['MITHRIL_PG_URI']
+  PG_URI = ENV['MITHRIL_PG_URI']
+  PG_DB_NAME = ENV['MITHRIL_PG_DB_NAME']
+else
+  PG_URI = 'postgres://localhost/mithril_test?sslmode=disable'
+  PG_DB_NAME = 'mithril_test'
+end
 $servers = {
   amqp_only: ServerRunner.new(
     port: rand(9400..9449),
@@ -161,18 +167,19 @@ describe 'with pg mithril server' do
   # Having tests for the database may seem odd in a golden master/black box
   # style test.  The reasoning here is that by ensuring the database interface,
   # we allow for innovation in "replay clients" (plus mithril doesn't yet have
-  # its own).
+  # its own).  Essentially, we are querying the database in the way that we
+  # would otherwise inspect STDOUT.
   it 'ensures the `mithril_requests` table is available' do
     out = run_psql(
-      '-t -c "SELECT COUNT(*) FROM mithril_requests"', user: PSQL_USER
+      'SELECT COUNT(*) FROM mithril_requests',
+      user: PSQL_USER
     ).first
-    count = Integer(out.strip)
-    count.must_be :>=, 5
+    out.strip.wont_be_empty
   end
 
   it 'tracks migrations with a schema migrations table' do
     out = run_psql(
-      '-t -c "SELECT * FROM mithril_schema_migrations"',
+      'SELECT * FROM mithril_schema_migrations',
       user: PSQL_USER
     ).first
     out.split($/).first.strip.wont_be_empty
@@ -181,9 +188,9 @@ describe 'with pg mithril server' do
   describe 'after requests have been POSTed' do
     before do
       run_psql(
-        %Q{-t -c "DELETE FROM mithril_requests
-                WHERE exchange = 'pg_exchange_#{SUITE_LOAD_START}'"},
-                user: PSQL_USER
+        %W{DELETE FROM mithril_requests
+           WHERE exchange = 'pg_exchange_#{SUITE_LOAD_START}'}.join(' '),
+        user: PSQL_USER
       )
       post_requests(
         port: $servers[:with_pg].port,
@@ -196,10 +203,10 @@ describe 'with pg mithril server' do
 
     it 'ensures requests can be selected by `exchange`' do
       out = run_psql(
-        %Q{-t -c "SELECT COUNT(*)
-                FROM mithril_requests
-                WHERE exchange = 'pg_exchange_#{SUITE_LOAD_START}'"},
-                user: PSQL_USER
+        %W{SELECT COUNT(*)
+           FROM mithril_requests
+           WHERE exchange = 'pg_exchange_#{SUITE_LOAD_START}'}.join(' '),
+        user: PSQL_USER
       ).first
       count = Integer(out.strip)
       count.must_equal 5
@@ -214,6 +221,10 @@ def main(argv = [].freeze)
     $servers.each do |_,runner|
       runner.stop
     end
+  end
+
+  %w(mithril_requests mithril_schema_migrations).each do |table_name|
+    run_psql("DROP TABLE IF EXISTS #{table_name}")
   end
 
   Dir.chdir(File.expand_path('../', __FILE__)) do
