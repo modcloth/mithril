@@ -15,7 +15,7 @@ class ServerRunner
     @addr = options[:port] ? ":#{options[:port]}" : ENV['ADDR']
     @port = (options[:port] || ENV['ADDR'] || '9494').to_s.gsub(/:/, '').to_i
     @startup_sleep = Float(
-      options[:startup_sleep] || ENV['MITHRIL_STARTUP_SLEEP'] || 1.0
+      options[:startup_sleep] || ENV['MITHRIL_STARTUP_SLEEP'] || 0.5
     )
 
     if !File.exist?(server_binary)
@@ -31,7 +31,7 @@ class ServerRunner
       "#{server_binary} -a #{addr} " <<
         ">> ./log/mithril-server-#{start}-#{port}.log 2>&1"
     )
-    sleep Float(ENV['MITHRIL_STARTUP_SLEEP'] || 2.0)
+    sleep @startup_sleep
     @server_pid
   end
 
@@ -65,8 +65,17 @@ $servers.each do |server_type,server|
   server_name = server_type.to_s.gsub(/_/, ' ')
   describe "#{server_name} mithril server" do
     it 'listens on the specified port' do
-      response = Net::HTTP.get('localhost', '/foop/fwap', server.port)
-      response.must_match(/^WOMP WOMP/)
+      Net::HTTP.get('localhost', '/foop/fwap', server.port).wont_be_empty
+    end
+
+    it 'rejects non-pprof GET requests' do
+      res = Net::HTTP.get_response('localhost', '/jazz/pant', server.port)
+      res.code.must_equal '405'
+    end
+
+    it 'serves a favicon' do
+      res = Net::HTTP.get_response('localhost', '/favicon.ico', server.port)
+      res['Content-Type'].must_equal 'image/vnd.microsoft.icon'
     end
   end
 end
