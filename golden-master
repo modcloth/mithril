@@ -49,6 +49,17 @@ class ServerRunner
   end
 end
 
+def run_psql(command, options = {})
+  if options[:user]
+    command = "-U #{options[:user]} #{command}"
+  end
+  output = `psql #{command}`.chomp
+  return [output, $?]
+end
+
+# ---------------------------------------------------------------------------
+
+$psql_user = ENV['TRAVIS'] ? 'postgres' : ENV['USER']
 $servers = {
   amqp_only: ServerRunner.new(
     port: rand(9400..9449),
@@ -60,6 +71,8 @@ $servers = {
     extra_args: '-pg -pg.uri="postgres://postgres@localhost?sslmode=disable"'
   )
 }
+
+# ---------------------------------------------------------------------------
 
 $servers.each do |server_type,server|
   server_name = server_type.to_s.gsub(/_/, ' ')
@@ -79,6 +92,25 @@ $servers.each do |server_type,server|
     end
   end
 end
+
+describe 'with pg mithril server' do
+  it 'ensures the `mithril_requests` table is available' do
+    out, status = run_psql(
+      '-t -c "SELECT COUNT(*) FROM mithril_requests"', user: $psql_user
+    )
+    out.strip.must_match(/[0-9]/)
+  end
+
+  it 'tracks migrations with a schema migrations table' do
+    out, status = run_psql(
+      '-t -c "SELECT version FROM mithril_schema_migrations ORDER BY version"',
+      user: $psql_user
+    )
+    out.split($/).first.strip.must_equal '20120505000000'
+  end
+end
+
+# ---------------------------------------------------------------------------
 
 if __FILE__ == $0
   at_exit do
