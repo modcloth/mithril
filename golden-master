@@ -84,5 +84,12 @@ if __FILE__ == $0
     end
   end
 
-  exit MiniTest::Unit.new.run(ARGV)
+  exit_code = MiniTest::Unit.new.run(ARGV)
+  if exit_code == 0
+    $stderr.puts "---> \033\[32;1mSATISFACTION\033\[0m <---"
+  else
+    $stderr.puts "---> \033\[31;1mDISAPPOINTMENT\033\[0m <---"
+  end
+
+  exit exit_code
 end
