@@ -241,23 +241,29 @@ def main(argv = [].freeze)
   exit_code = MiniTest::Unit.new.run(argv)
 
   if exit_code == 0
-    $stderr.puts <<-EOF.gsub(/^ {6}/, '')
-      #{BRIGHT_GREEN}
-      ____ ____ ___ _ ____ ____ ____ ____ ___ _ ____ _  _
-      [__  |__|  |  | [__  |___ |__| |     |  | |  | |\\ |
-      ___] |  |  |  | ___] |    |  | |___  |  | |__| | \\|
-
-      #{RESET}
+    $stderr.puts BRIGHT_GREEN
+    $stderr.puts <<-EOF.gsub(/^ {4}/, '')
+      ✓✓      ✓✓ ✓✓✓✓ ✓✓    ✓✓
+      ✓✓  ✓✓  ✓✓  ✓✓  ✓✓✓   ✓✓
+      ✓✓  ✓✓  ✓✓  ✓✓  ✓✓✓✓  ✓✓
+      ✓✓  ✓✓  ✓✓  ✓✓  ✓✓ ✓✓ ✓✓
+      ✓✓  ✓✓  ✓✓  ✓✓  ✓✓  ✓✓✓✓
+      ✓✓  ✓✓  ✓✓  ✓✓  ✓✓   ✓✓✓
+       ✓✓✓  ✓✓✓  ✓✓✓✓ ✓✓    ✓✓
     EOF
+    $stderr.puts RESET
   else
-    $stderr.puts <<-EOF.gsub(/^ {6}/, '')
-      #{BRIGHT_RED}
-      ___  _ ____ ____ ___  ___  ____ _ _  _ ___ _  _ ____ _  _ ___
-      |  \\ | [__  |__| |__] |__] |  | | |\\ |  |  |\\/| |___ |\\ |  |
-      |__/ | ___] |  | |    |    |__| | | \\|  |  |  | |___ | \\|  |
-
-      #{RESET}
+    $stderr.puts BRIGHT_RED
+    $stderr.puts <<-EOF.gsub(/^ {4}/, '')
+      ✘✘✘✘✘✘✘✘    ✘✘✘    ✘✘✘✘ ✘✘
+      ✘✘         ✘✘ ✘✘    ✘✘  ✘✘
+      ✘✘        ✘✘   ✘✘   ✘✘  ✘✘
+      ✘✘✘✘✘✘   ✘✘     ✘✘  ✘✘  ✘✘
+      ✘✘       ✘✘✘✘✘✘✘✘✘  ✘✘  ✘✘
+      ✘✘       ✘✘     ✘✘  ✘✘  ✘✘
+      ✘✘       ✘✘     ✘✘ ✘✘✘✘ ✘✘✘✘✘✘✘✘
     EOF
+    $stderr.puts RESET
 
     $servers.each { |_,server| server.dump_log }
   end
