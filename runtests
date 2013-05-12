@@ -4,128 +4,9 @@
 require 'fileutils'
 require 'minitest/spec'
 require 'net/http'
-require 'uri'
 
-class ServerRunner
-  attr_reader :server_binary, :addr, :port, :extra_args, :logfile
-  attr_reader :startup_sleep, :start_time, :server_pid, :pidfile
-
-  def initialize(options = {})
-    @start_time = options[:start] || Time.now.utc
-    start = start_time.strftime('%Y%m%d%H%M%S')
-    @server_binary = "#{ENV['GOPATH'].split(/:/).first}/bin/mithril-server"
-    @addr = options[:port] ? ":#{options[:port]}" : ENV['ADDR']
-    @port = (options[:port] || ENV['ADDR'] || '9494').to_s.gsub(/:/, '').to_i
-    @logfile = File.expand_path(
-      "../log/mithril-server-#{start}-#{port}.log",
-      __FILE__
-    )
-    @pidfile = (options[:pidfile] || "mithril-server-#{@port}.pid")
-    @extra_args = options[:extra_args] || ''
-    @startup_sleep = Float(
-      options[:startup_sleep] || ENV['MITHRIL_STARTUP_SLEEP'] || 0.5
-    )
-
-    if !File.exist?(server_binary)
-      raise "Can't locate `mithril-server` binary! " <<
-            "(it's not here: #{server_binary.inspect})"
-    end
-  end
-
-  def start
-    announce! "Starting mithril server with address #{addr}"
-    @server_pid = Process.spawn(
-      "#{server_binary} -a #{addr} -p #{pidfile} #{extra_args}" <<
-        ">> #{logfile} 2>&1"
-    )
-    sleep @startup_sleep
-    @server_pid
-  end
-
-  def stop
-    real_pid = Integer(File.read(pidfile).chomp) rescue nil
-    if server_pid && real_pid
-      announce! "Stopping mithril server with address #{addr} " <<
-                "(shell PID=#{server_pid}, server PID=#{real_pid})"
-
-      [real_pid, server_pid].each do |pid|
-        Process.kill(:TERM, pid) rescue nil
-      end
-    end
-  end
-
-  def dump_log
-    announce! "Dumping #{logfile}"
-    File.read(logfile).split($/).each do |line|
-      announce! "--> #{line}"
-    end
-  end
-end
-
-GOLD = "\033\[33;1m"
-RESET = "\033\[0m"
-GREEN = "\033\[32m"
-RED = "\033\[31m"
-BRIGHT_GREEN = "\033\[32;1m"
-BRIGHT_RED = "\033\[31;1m"
-
-def announce!(something)
-  $stderr.puts "#{GOLD}golden#{RESET}: #{GREEN}#{something}#{RESET}"
-end
-
-class MiniTestReporter
-  def puts(*args)
-    args.each { |arg| announce! arg }
-  end
-
-  alias print puts
-end
-
-def run_psql(command, options = {})
-  exe = %Q{psql -d #{PG_DB_NAME} -t -c "#{command}"}
-  if options[:user]
-    exe = %Q{psql -U #{options[:user]} -d #{PG_DB_NAME} -t -c "#{command}"}
-  end
-  announce! "psql executing: #{exe}"
-  output = `#{exe}`.chomp
-  return [output, $?]
-end
-
-def post_requests(options = {})
-  path = "/#{options[:exchange] || 'foop'}/#{options[:routing_key] || 'fwap'}"
-  port = options[:port] || 8371
-  request = Net::HTTP::Post.new(path)
-  request.content_type = case options[:type]
-                         when :json
-                           'application/json'
-                         when :xml
-                           'application/xml'
-                         else
-                           'application/octet-stream'
-                         end
-
-  Integer(options[:count] || 1).times do |n|
-    response = Net::HTTP.start('localhost', port) do |http|
-      request.body = case options[:type]
-                     when :json
-                       %Q/{"flume":"sandbag #{rand}"}/
-                     when :xml
-                       %Q(<flume sandbag="#{rand}"></flume>)
-                     else
-                       %Q(\x99f\x81l\x78u\x93m\x33e\x90)
-                     end
-      http.request(request)
-    end
-
-    if response.code != '204'
-      raise "Failed POST: #{response.inspect}"
-    end
-
-    announce! "POSTed #{request.body.inspect} to #{request.path.inspect}"
-  end
-end
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+require File.expand_path('../.golden/bits', __FILE__)
+require File.expand_path('../.golden/server_runner', __FILE__)
 
 SUITE_LOAD_START = Time.now.utc.strftime('%Y%m%d%H%M%S')
 PSQL_USER = ENV['MITHRIL_PG_USER'] || ENV['USER']
@@ -145,8 +26,6 @@ $servers = {
     extra_args: "-pg -pg.uri='#{PG_URI}'"
   )
 }
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 $servers.each do |server_type,server|
   server_name = server_type.to_s.gsub(/_/, ' ')
@@ -176,7 +55,7 @@ describe 'with pg mithril server' do
   it 'ensures the `mithril_requests` table is available' do
     out = run_psql(
       'SELECT COUNT(*) FROM mithril_requests',
-      user: PSQL_USER
+      user: PSQL_USER, db: PG_DB_NAME
     ).first
     out.strip.wont_be_empty
   end
@@ -184,7 +63,7 @@ describe 'with pg mithril server' do
   it 'tracks migrations with a schema migrations table' do
     out = run_psql(
       'SELECT * FROM mithril_schema_migrations',
-      user: PSQL_USER
+      user: PSQL_USER, db: PG_DB_NAME
     ).first
     out.split($/).first.strip.wont_be_empty
   end
@@ -194,7 +73,7 @@ describe 'with pg mithril server' do
       run_psql(
         %W{DELETE FROM mithril_requests
            WHERE exchange = 'pg_exchange_#{SUITE_LOAD_START}'}.join(' '),
-        user: PSQL_USER
+        user: PSQL_USER, db: PG_DB_NAME
       )
       post_requests(
         port: $servers[:with_pg].port,
@@ -210,7 +89,7 @@ describe 'with pg mithril server' do
         %W{SELECT COUNT(*)
            FROM mithril_requests
            WHERE exchange = 'pg_exchange_#{SUITE_LOAD_START}'}.join(' '),
-        user: PSQL_USER
+        user: PSQL_USER, db: PG_DB_NAME
       ).first
       count = Integer(out.strip)
       count.must_equal 5
@@ -228,7 +107,10 @@ def main(argv = [].freeze)
   end
 
   %w(mithril_requests mithril_schema_migrations).each do |table_name|
-    run_psql("DROP TABLE IF EXISTS #{table_name}")
+    run_psql(
+      "DROP TABLE IF EXISTS #{table_name}",
+      user: PSQL_USER, db: PG_DB_NAME
+    )
   end
 
   Dir.chdir(File.expand_path('../', __FILE__)) do
