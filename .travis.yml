@@ -11,5 +11,4 @@ services:
 install:
 - mkdir -p $GOPATH_DEST
 - ln -sv $TRAVIS_BUILD_DIR $GOPATH_DEST/mithril
-script:
-- make golden
+script: make golden

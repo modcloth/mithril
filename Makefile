@@ -23,6 +23,6 @@ serve:
 	$${GOPATH%%:*}/bin/mithril-server -a $(ADDR)
 
 golden: test
-	./golden-master -v
+	./runtests -v
 
 .PHONY: build deps test clean serve
