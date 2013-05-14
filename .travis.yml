@@ -15,8 +15,8 @@ install:
 - mkdir -p $GOPATH_DEST
 - ln -sv $TRAVIS_BUILD_DIR $GOPATH_DEST/mithril
 script:
-- !  'if [[ "$MITHRIL_PG_ENABLED" == 'true' ]] ; then
-        make golden ;
-      else
-        make golden GO_TAG_ARGS="" ;
-      fi'
+- ! 'if [[ "$MITHRIL_PG_ENABLED" == "true" ]] ; then
+       make golden ;
+     else
+       make golden GO_TAG_ARGS="" ;
+     fi'
