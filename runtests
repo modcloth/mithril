@@ -8,7 +8,7 @@ require 'net/http'
 require File.expand_path('../.golden/bits', __FILE__)
 require File.expand_path('../.golden/server_runner', __FILE__)
 
-PG_ENABLED = ENV['MITHRIL_PG_ENABLED'] == 'true'
+PG_ENABLED = ENV['MITHRIL_PG_ENABLED'] != 'false'
 SUITE_LOAD_START = Time.now.utc.strftime('%Y%m%d%H%M%S')
 if PG_ENABLED
   PSQL_USER = ENV['MITHRIL_PG_USER'] || ENV['USER']
