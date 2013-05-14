@@ -4,17 +4,19 @@ TARGETS := \
   $(LIBS) \
   github.com/modcloth-labs/mithril/mithril-server
 
+GO_TAG_ARGS := -tags pg
+
 ADDR := :8371
 export ADDR
 
 test: build
-	go test -x $(LIBS)
+	go test $(GO_TAG_ARGS) -x $(LIBS)
 
 build: deps
-	go install -x $(TARGETS)
+	go install $(GO_TAG_ARGS) -x $(TARGETS)
 
 deps:
-	go get -x -n $(TARGETS)
+	go get $(GO_TAG_ARGS) -x -n $(TARGETS)
 
 clean:
 	go clean -x $(TARGETS)
