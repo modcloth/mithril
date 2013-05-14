@@ -8,10 +8,13 @@ require 'net/http'
 require File.expand_path('../.golden/bits', __FILE__)
 require File.expand_path('../.golden/server_runner', __FILE__)
 
+PG_ENABLED = ENV['MITHRIL_PG_ENABLED'] == 'true'
 SUITE_LOAD_START = Time.now.utc.strftime('%Y%m%d%H%M%S')
-PSQL_USER = ENV['MITHRIL_PG_USER'] || ENV['USER']
-PG_URI = ENV['MITHRIL_PG_URI'] || 'postgres://localhost/mithril_test?sslmode=disable'
-PG_DB_NAME = ENV['MITHRIL_PG_DB_NAME'] || 'mithril_test'
+if PG_ENABLED
+  PSQL_USER = ENV['MITHRIL_PG_USER'] || ENV['USER']
+  PG_URI = ENV['MITHRIL_PG_URI'] || 'postgres://localhost/mithril_test?sslmode=disable'
+  PG_DB_NAME = ENV['MITHRIL_PG_DB_NAME'] || 'mithril_test'
+end
 
 $servers = {
   amqp_only: ServerRunner.new(
@@ -19,13 +22,15 @@ $servers = {
     start: Time.now.utc,
     pidfile: File.expand_path('../log/mithril-server-amqp-only.pid', __FILE__),
   ),
-  with_pg: ServerRunner.new(
+}
+if PG_ENABLED
+  $servers[:with_pg] = ServerRunner.new(
     port: rand(9450..9499),
     start: Time.now.utc,
     pidfile: File.expand_path('../log/mithril-server-with-pg.pid', __FILE__),
     extra_args: "-pg -pg.uri='#{PG_URI}'"
   )
-}
+end
 
 $servers.each do |server_type,server|
   server_name = server_type.to_s.gsub(/_/, ' ')
@@ -46,53 +51,55 @@ $servers.each do |server_type,server|
   end
 end
 
-describe 'with pg mithril server' do
-  # Having tests for the database may seem odd in a golden master/black box
-  # style test.  The reasoning here is that by ensuring the database interface,
-  # we allow for innovation in "replay clients" (plus mithril doesn't yet have
-  # its own).  Essentially, we are querying the database in the way that we
-  # would otherwise inspect STDOUT.
-  it 'ensures the `mithril_requests` table is available' do
-    out = run_psql(
-      'SELECT COUNT(*) FROM mithril_requests',
-      user: PSQL_USER, db: PG_DB_NAME
-    ).first
-    out.strip.wont_be_empty
-  end
-
-  it 'tracks migrations with a schema migrations table' do
-    out = run_psql(
-      'SELECT * FROM mithril_schema_migrations',
-      user: PSQL_USER, db: PG_DB_NAME
-    ).first
-    out.split($/).first.strip.wont_be_empty
-  end
-
-  describe 'after requests have been POSTed' do
-    before do
-      run_psql(
-        %W{DELETE FROM mithril_requests
-           WHERE exchange = 'pg_exchange_#{SUITE_LOAD_START}'}.join(' '),
-        user: PSQL_USER, db: PG_DB_NAME
-      )
-      post_requests(
-        port: $servers[:with_pg].port,
-        type: :json,
-        count: 5,
-        exchange: "pg_exchange_#{SUITE_LOAD_START}",
-        routing_key: 'pg.new',
-      )
-    end
-
-    it 'ensures requests can be selected by `exchange`' do
+if PG_ENABLED
+  describe 'with pg mithril server' do
+    # Having tests for the database may seem odd in a golden master/black box
+    # style test.  The reasoning here is that by ensuring the database interface,
+    # we allow for innovation in "replay clients" (plus mithril doesn't yet have
+    # its own).  Essentially, we are querying the database in the way that we
+    # would otherwise inspect STDOUT.
+    it 'ensures the `mithril_requests` table is available' do
       out = run_psql(
-        %W{SELECT COUNT(*)
-           FROM mithril_requests
-           WHERE exchange = 'pg_exchange_#{SUITE_LOAD_START}'}.join(' '),
+        'SELECT COUNT(*) FROM mithril_requests',
         user: PSQL_USER, db: PG_DB_NAME
       ).first
-      count = Integer(out.strip)
-      count.must_equal 5
+      out.strip.wont_be_empty
+    end
+
+    it 'tracks migrations with a schema migrations table' do
+      out = run_psql(
+        'SELECT * FROM mithril_schema_migrations',
+        user: PSQL_USER, db: PG_DB_NAME
+      ).first
+      out.split($/).first.strip.wont_be_empty
+    end
+
+    describe 'after requests have been POSTed' do
+      before do
+        run_psql(
+          %W{DELETE FROM mithril_requests
+           WHERE exchange = 'pg_exchange_#{SUITE_LOAD_START}'}.join(' '),
+           user: PSQL_USER, db: PG_DB_NAME
+        )
+        post_requests(
+          port: $servers[:with_pg].port,
+          type: :json,
+          count: 5,
+          exchange: "pg_exchange_#{SUITE_LOAD_START}",
+          routing_key: 'pg.new',
+        )
+      end
+
+      it 'ensures requests can be selected by `exchange`' do
+        out = run_psql(
+          %W{SELECT COUNT(*)
+           FROM mithril_requests
+           WHERE exchange = 'pg_exchange_#{SUITE_LOAD_START}'}.join(' '),
+           user: PSQL_USER, db: PG_DB_NAME
+        ).first
+        count = Integer(out.strip)
+        count.must_equal 5
+      end
     end
   end
 end
@@ -106,11 +113,13 @@ def main(argv = [].freeze)
     end
   end
 
-  %w(mithril_requests mithril_schema_migrations).each do |table_name|
-    run_psql(
-      "DROP TABLE IF EXISTS #{table_name}",
-      user: PSQL_USER, db: PG_DB_NAME
-    )
+  if PG_ENABLED
+    %w(mithril_requests mithril_schema_migrations).each do |table_name|
+      run_psql(
+        "DROP TABLE IF EXISTS #{table_name}",
+        user: PSQL_USER, db: PG_DB_NAME
+      )
+    end
   end
 
   Dir.chdir(File.expand_path('../', __FILE__)) do
