@@ -1,5 +1,9 @@
 ---
 language: go
+notifications:
+  email:
+    recipients:
+      - flintknappers+mithril@modcloth.com
 env:
   global:
   - GOPATH_DEST=$HOME/gopath/src/github.com/modcloth-labs
