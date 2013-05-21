@@ -1,4 +1,4 @@
-// +build pg
+// +build pg full
 
 package mithril
 

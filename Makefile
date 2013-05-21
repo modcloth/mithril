@@ -4,7 +4,7 @@ TARGETS := \
   $(LIBS) \
   github.com/modcloth-labs/mithril/mithril-server
 
-GO_TAG_ARGS ?= -tags pg
+GO_TAG_ARGS ?= -tags full
 
 ADDR := :8371
 export ADDR
