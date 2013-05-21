@@ -7,8 +7,8 @@ env:
   - MITHRIL_PG_DB_NAME='postgres'
   - MITHRIL_PG_USER='postgres'
   matrix:
-  - MITHRIL_PG_ENABLED=true GO_TAG_ARGS=pg
-  - MITHRIL_PG_ENABLED=false GO_TAG_ARGS=
+  - MITHRIL_PG_ENABLED='true' GO_TAG_ARGS='pg'
+  - MITHRIL_PG_ENABLED='false' GO_TAG_ARGS=''
 services:
 - rabbitmq
 install: cd $TRAVIS_BUILD_DIR && make build
