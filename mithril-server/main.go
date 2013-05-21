@@ -48,9 +48,10 @@ func main() {
 	pipeline = mithril.NewAMQPHandler(*amqpUriFlag, nil)
 
 	for _, name := range pipelineOrder {
-		callback := pipelineCallbacks[name]
-		log.Printf("Calling %q pipeline callback", name)
-		pipeline = callback(pipeline)
+		if callback, ok := pipelineCallbacks[name]; ok {
+			log.Printf("Calling %q pipeline callback", name)
+			pipeline = callback(pipeline)
+		}
 	}
 
 	if err := pipeline.Init(); err != nil {
