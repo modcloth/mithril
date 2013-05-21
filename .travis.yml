@@ -1,9 +1,5 @@
 ---
 language: go
-notifications:
-  email:
-    recipients:
-      - flintknappers+mithril@modcloth.com
 env:
   global:
   - GOPATH_DEST=$HOME/gopath/src/github.com/modcloth-labs
@@ -11,16 +7,13 @@ env:
   - MITHRIL_PG_DB_NAME='postgres'
   - MITHRIL_PG_USER='postgres'
   matrix:
-  - MITHRIL_PG_ENABLED=true
-  - MITHRIL_PG_ENABLED=false
+  - MITHRIL_PG_ENABLED=true GO_TAG_ARGS=pg
+  - MITHRIL_PG_ENABLED=false GO_TAG_ARGS=
 services:
 - rabbitmq
-install:
-- mkdir -p $GOPATH_DEST
-- ln -sv $TRAVIS_BUILD_DIR $GOPATH_DEST/mithril
-script:
-- ! 'if [[ "$MITHRIL_PG_ENABLED" == "true" ]] ; then
-       make golden ;
-     else
-       make golden GO_TAG_ARGS="" ;
-     fi'
+install: cd $TRAVIS_BUILD_DIR && make build
+script: cd $TRAVIS_BUILD_DIR && make golden
+notifications:
+  email:
+    recipients:
+      - flintknappers+mithril@modcloth.com
