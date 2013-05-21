@@ -18,6 +18,7 @@ var (
 	amqpUriFlag = flag.String("amqp.uri",
 		"amqp://guest:guest@localhost:5672", "AMQP Server URI")
 	pipelineCallbacks = map[string]func(mithril.Handler) mithril.Handler{}
+	pipelineOrder     = []string{"pg"}
 
 	pidFlag = flag.String("p", "", "PID file (only written if provided)")
 )
@@ -46,7 +47,8 @@ func main() {
 	server := mithril.NewServer()
 	pipeline = mithril.NewAMQPHandler(*amqpUriFlag, nil)
 
-	for name, callback := range pipelineCallbacks {
+	for _, name := range pipelineOrder {
+		callback := pipelineCallbacks[name]
 		log.Printf("Calling %q pipeline callback", name)
 		pipeline = callback(pipeline)
 	}

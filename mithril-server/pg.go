@@ -4,6 +4,7 @@ package main
 
 import (
 	"flag"
+	"log"
 
 	"github.com/modcloth-labs/mithril"
 )
@@ -17,7 +18,10 @@ var (
 func init() {
 	pipelineCallbacks["pg"] = func(pipeline mithril.Handler) mithril.Handler {
 		if *enablePgFlag {
+			log.Printf("  --> pg enabled, so adding postgresql handler")
 			pipeline = mithril.NewPostgreSQLHandler(*pgUriFlag, pipeline)
+		} else {
+			log.Printf("  --> pg not enabled, so leaving pipeline unaltered")
 		}
 		return pipeline
 	}
