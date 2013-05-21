@@ -1,18 +1,19 @@
 ---
 language: go
-notifications:
-  email:
-    recipients:
-      - flintknappers+mithril@modcloth.com
 env:
   global:
   - GOPATH_DEST=$HOME/gopath/src/github.com/modcloth-labs
   - MITHRIL_PG_URI='postgres://postgres@localhost?sslmode=disable'
   - MITHRIL_PG_DB_NAME='postgres'
   - MITHRIL_PG_USER='postgres'
+  matrix:
+  - MITHRIL_PG_ENABLED='true' GO_TAG_ARGS='-tags pg'
+  - MITHRIL_PG_ENABLED='false' GO_TAG_ARGS=''
 services:
 - rabbitmq
-install:
-- mkdir -p $GOPATH_DEST
-- ln -sv $TRAVIS_BUILD_DIR $GOPATH_DEST/mithril
-script: make golden
+install: cd $TRAVIS_BUILD_DIR && make build
+script: cd $TRAVIS_BUILD_DIR && make golden
+notifications:
+  email:
+    recipients:
+      - flintknappers+mithril@modcloth.com

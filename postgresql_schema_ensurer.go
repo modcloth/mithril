@@ -1,3 +1,5 @@
+// +build pg full
+
 package mithril
 
 import (
