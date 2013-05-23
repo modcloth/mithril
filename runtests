@@ -111,6 +111,7 @@ def main(argv = [].freeze)
     $servers.each do |_,runner|
       runner.stop
     end
+    `rabbitmqadmin delete exchange name=pg_exchange_#{SUITE_LOAD_START}`
   end
 
   if PG_ENABLED
@@ -121,6 +122,10 @@ def main(argv = [].freeze)
       )
     end
   end
+
+  `rabbitmqadmin declare exchange name=pg_exchange_#{SUITE_LOAD_START} type=topic`
+
+  raise "Couldn't declare exchange pg_exchange_#{SUITE_LOAD_START}" if $? != 0
 
   Dir.chdir(File.expand_path('../', __FILE__)) do
     FileUtils.mkdir_p('./log')
