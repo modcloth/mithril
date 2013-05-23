@@ -32,10 +32,10 @@ env:
 services:
 - rabbitmq
 before_install:
-- sudo rabbitmq-plugins enable rabbitmq_management
-- curl http://guest:guest@localhost:15672/cli/rabbitmqadmin > $HOME/bin/rabbitmqadmin
 - mkdir -p $HOME/bin
 - pushd $HOME/bin
+- sudo rabbitmq-plugins enable rabbitmq_management
+- curl http://guest:guest@localhost:15672/cli/rabbitmqadmin > $HOME/bin/rabbitmqadmin
 - curl -s -O https://raw.github.com/modcloth-labs/travis-buddy/v0.1.0/tb
 - chmod +x tb
 - popd
