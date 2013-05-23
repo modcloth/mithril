@@ -2,6 +2,9 @@
 language: go
 env:
   global:
+  - PATH=$HOME/bin:$PATH
+  - ARTIFACTS_AWS_REGION=us-east-1
+  - ARTIFACTS_S3_BUCKET=travis-artifacts-modcloth
   - GOPATH_DEST=$HOME/gopath/src/github.com/modcloth-labs
   - MITHRIL_PG_URI='postgres://postgres@localhost?sslmode=disable'
   - MITHRIL_PG_DB_NAME='postgres'
@@ -11,8 +14,34 @@ env:
   - MITHRIL_PG_ENABLED='false' GO_TAG_ARGS=''
 services:
 - rabbitmq
-install: cd $TRAVIS_BUILD_DIR && make build
-script: cd $TRAVIS_BUILD_DIR && make golden
+before_install:
+- mkdir -p $HOME/bin
+- pushd $HOME/bin
+- curl -s -O https://raw.github.com/modcloth-labs/travis-buddy/v0.1.0/tb
+- chmod +x tb
+- popd
+- tb setup-aws
+- if tb nopr ; then
+    tb install-travis-artifacts ;
+  fi
+install:
+- if tb nopr ; then
+    cd $TRAVIS_BUILD_DIR && make build ;
+  else
+    echo Building pull requests for mithril no worky ;
+  fi
+script:
+- if tb nopr ; then
+    cd $TRAVIS_BUILD_DIR && make golden ;
+  else
+    echo Building pull requests for mithril no worky ;
+  fi
+after_success:
+- if tb nopr ; then
+    tb upload-go-artifacts --encrypt ;
+    tb upload-artifact artifacts/binaries/$(go env GOOS)/$(go env GOARCH)/mithril/$TRAVIS_COMMIT/
+      --encrypt ;
+  fi
 notifications:
   email:
     recipients:
