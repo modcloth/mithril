@@ -143,4 +143,6 @@ func (me *AMQPHandler) publishAdaptedRequest(amqpReq *amqpAdaptedRequest) error 
 	case _ = <-me.confirmNack:
 		return fmt.Errorf("RabbitMQ nack'd message")
 	}
+
+	panic("I shouldn't be here")
 }
