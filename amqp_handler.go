@@ -1,6 +1,7 @@
 package mithril
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/streadway/amqp"
@@ -19,6 +20,8 @@ type AMQPHandler struct {
 	amqpConn        *amqp.Connection
 	handlingChannel *amqp.Channel
 	nextHandler     Handler
+	confirmAck      chan uint64
+	confirmNack     chan uint64
 }
 
 func NewAMQPHandler(amqpUri string, next Handler) *AMQPHandler {
@@ -85,6 +88,12 @@ func (me *AMQPHandler) establishConnection() error {
 		return err
 	}
 
+	if err = handlingChannel.Confirm(false); err != nil {
+		return err
+	}
+
+	me.confirmAck, me.confirmNack = handlingChannel.NotifyConfirm(make(chan uint64, 1), make(chan uint64, 1))
+
 	me.handlingChannel = handlingChannel
 	return nil
 }
@@ -120,7 +129,18 @@ func (me *AMQPHandler) adaptHttpRequest(req *FancyRequest) *amqpAdaptedRequest {
 func (me *AMQPHandler) publishAdaptedRequest(amqpReq *amqpAdaptedRequest) error {
 	log.Printf("Publishing adapted HTTP request %+v", amqpReq)
 
-	return me.handlingChannel.Publish(amqpReq.Exchange,
+	err := me.handlingChannel.Publish(amqpReq.Exchange,
 		amqpReq.RoutingKey, amqpReq.Mandatory,
 		amqpReq.Immediate, *amqpReq.Publishing)
+
+	if err != nil {
+		return err
+	}
+
+	select {
+	case _ = <-me.confirmAck:
+		return nil
+	case _ = <-me.confirmNack:
+		return fmt.Errorf("RabbitMQ nack'd message")
+	}
 }
