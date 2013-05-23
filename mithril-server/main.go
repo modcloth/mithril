@@ -17,10 +17,8 @@ var (
 
 	amqpUriFlag = flag.String("amqp.uri",
 		"amqp://guest:guest@localhost:5672", "AMQP Server URI")
-
-	enablePgFlag = flag.Bool("pg", false, "Enable PostgreSQL handler")
-	pgUriFlag    = flag.String("pg.uri",
-		"postgres://localhost?sslmode=disable", "PostgreSQL Server URI")
+	pipelineCallbacks = map[string]func(mithril.Handler) mithril.Handler{}
+	pipelineOrder     = []string{"pg"}
 
 	pidFlag = flag.String("p", "", "PID file (only written if provided)")
 )
@@ -49,8 +47,11 @@ func main() {
 	server := mithril.NewServer()
 	pipeline = mithril.NewAMQPHandler(*amqpUriFlag, nil)
 
-	if *enablePgFlag {
-		pipeline = mithril.NewPostgreSQLHandler(*pgUriFlag, pipeline)
+	for _, name := range pipelineOrder {
+		if callback, ok := pipelineCallbacks[name]; ok {
+			log.Printf("Calling %q pipeline callback", name)
+			pipeline = callback(pipeline)
+		}
 	}
 
 	if err := pipeline.Init(); err != nil {
