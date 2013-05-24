@@ -2,7 +2,6 @@ package mithril
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/streadway/amqp"
 )
@@ -40,7 +39,7 @@ func (me *AMQPHandler) Init() error {
 		return err
 	}
 
-	log.Println("AMQP handler initialized")
+	Debugln("AMQP handler initialized")
 
 	if me.nextHandler != nil {
 		return me.nextHandler.Init()
@@ -66,7 +65,7 @@ func (me *AMQPHandler) HandleRequest(req *FancyRequest) error {
 	amqpReq = me.adaptHttpRequest(req)
 
 	if err = me.publishAdaptedRequest(amqpReq); err != nil {
-		log.Println("Failed to publish request:", err)
+		Debugln("Failed to publish request:", err)
 		return err
 	}
 
@@ -127,7 +126,7 @@ func (me *AMQPHandler) adaptHttpRequest(req *FancyRequest) *amqpAdaptedRequest {
 }
 
 func (me *AMQPHandler) publishAdaptedRequest(amqpReq *amqpAdaptedRequest) error {
-	log.Printf("Publishing adapted HTTP request %+v", amqpReq)
+	Debugf("Publishing adapted HTTP request %+v", amqpReq)
 
 	err := me.handlingChannel.Publish(amqpReq.Exchange,
 		amqpReq.RoutingKey, amqpReq.Mandatory,

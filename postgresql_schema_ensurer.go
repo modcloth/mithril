@@ -5,7 +5,6 @@ package mithril
 import (
 	"database/sql"
 	"fmt"
-	"log"
 )
 
 // This happens to be in the `mithril` package for now, but the intent is that
@@ -31,7 +30,7 @@ func (me *pgSchemaEnsurer) Init() error {
 			version character varying(255) NOT NULL
 		);
     `, me.schemaTable))
-	log.Printf("Ensuring schema versions table exists "+
+	Debugf("Ensuring schema versions table exists "+
 		"results=%+v, error=%+v", r, err)
 	return err
 }
