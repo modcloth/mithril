@@ -126,7 +126,7 @@ func (me *AMQPHandler) adaptHttpRequest(req *FancyRequest) *amqpAdaptedRequest {
 }
 
 func (me *AMQPHandler) publishAdaptedRequest(amqpReq *amqpAdaptedRequest) error {
-	Debugf("Publishing adapted HTTP request %+v", amqpReq)
+	Debugf("Publishing adapted HTTP request %+v\n", amqpReq)
 
 	err := me.handlingChannel.Publish(amqpReq.Exchange,
 		amqpReq.RoutingKey, amqpReq.Mandatory,

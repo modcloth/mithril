@@ -21,14 +21,14 @@ func (me *DebuggingHandler) Init() error {
 }
 
 func (me *DebuggingHandler) HandleRequest(req *FancyRequest) error {
-	Debugf("handling request -> %+v", req)
+	Debugf("Handling request -> %+v\n", req)
 
 	if me.nextHandler == nil {
 		return nil
 	}
 
 	if result := me.nextHandler.HandleRequest(req); result != nil {
-		Debugf("ERROR: %+v", result)
+		Debugf("ERROR: %+v\n", result)
 		return result
 	}
 

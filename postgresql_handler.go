@@ -112,7 +112,7 @@ func (me *PostgreSQLHandler) insertRequest(req *FancyRequest) error {
 		req.BodyBytes,
 	)
 
-	Debugf("Insert returned result=%+v, err=%+v", r, err)
+	Debugf("Insert returned result=%+v, err=%+v\n", r, err)
 	return err
 }
 

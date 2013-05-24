@@ -17,10 +17,10 @@ var (
 func init() {
 	pipelineCallbacks["pg"] = func(pipeline mithril.Handler) mithril.Handler {
 		if *enablePgFlag {
-			mithril.Debugf("  --> pg enabled, so adding postgresql handler")
+			mithril.Debugln("  --> pg enabled, so adding postgresql handler")
 			pipeline = mithril.NewPostgreSQLHandler(*pgUriFlag, pipeline)
 		} else {
-			mithril.Debugf("  --> pg not enabled, so leaving pipeline unaltered")
+			mithril.Debugln("  --> pg not enabled, so leaving pipeline unaltered")
 		}
 		return pipeline
 	}

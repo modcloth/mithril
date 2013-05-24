@@ -49,7 +49,7 @@ func main() {
 
 	for _, name := range pipelineOrder {
 		if callback, ok := pipelineCallbacks[name]; ok {
-			mithril.Debugf("Calling %q pipeline callback", name)
+			mithril.Debugf("Calling %q pipeline callback\n", name)
 			pipeline = callback(pipeline)
 		}
 	}
