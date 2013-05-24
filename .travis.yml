@@ -44,18 +44,8 @@ before_install:
 - if tb nopr ; then
     tb install-travis-artifacts ;
   fi
-install:
-- if tb nopr ; then
-    cd $TRAVIS_BUILD_DIR && make build ;
-  else
-    echo Building pull requests for mithril no worky ;
-  fi
-script:
-- if tb nopr ; then
-    cd $TRAVIS_BUILD_DIR && make golden ;
-  else
-    echo Building pull requests for mithril no worky ;
-  fi
+install: cd $TRAVIS_BUILD_DIR && make build
+script: cd $TRAVIS_BUILD_DIR && make golden
 after_success:
 - if tb nopr ; then
     tb upload-go-artifacts --encrypt ;
