@@ -27,7 +27,7 @@ env:
 
       HaD9pTqPeK7y2tsuLUhBPk1Q0OYp3TXZFaxwFI9JCjnoYw4sg5o='
   matrix:
-  - MITHRIL_PG_ENABLED='true' GO_TAG_ARGS='-tags pg'
+  - MITHRIL_PG_ENABLED='true' GO_TAG_ARGS='-tags full'
   - MITHRIL_PG_ENABLED='false' GO_TAG_ARGS=''
 services:
 - rabbitmq

@@ -32,7 +32,7 @@ func (me *pgSchemaEnsurer) Init() error {
 		);
     `, me.schemaTable))
 	log.Printf("Ensuring schema versions table exists "+
-		"results=%+v, error=%+v", r, err)
+		"results=%+v, error=%+v\n", r, err)
 	return err
 }
 
