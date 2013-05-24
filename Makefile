@@ -9,7 +9,7 @@ GO_TAG_ARGS ?= -tags full
 ADDR := :8371
 export ADDR
 
-test: build
+test: clean build
 	go test $(GO_TAG_ARGS) -x $(LIBS)
 
 build: deps
@@ -19,10 +19,11 @@ deps:
 	go get $(GO_TAG_ARGS) -x -n $(TARGETS)
 
 clean:
+	find $${GOPATH%%:*}/pkg -name '*mithril*' -exec rm -v {} \;
 	go clean -x $(TARGETS)
 
 serve:
-	$${GOPATH%%:*}/bin/mithril-server -a $(ADDR)
+	$${GOPATH%%:*}/bin/mithril-server -d -a $(ADDR)
 
 golden: test
 	./runtests -v

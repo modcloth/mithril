@@ -5,7 +5,6 @@ package mithril
 import (
 	"database/sql"
 	"fmt"
-	"log"
 
 	"github.com/lib/pq"
 )
@@ -61,7 +60,7 @@ func (me *PostgreSQLHandler) Init() error {
 		return err
 	}
 
-	log.Println("PostgreSQL handler initialized")
+	Debugln("PostgreSQL handler initialized")
 
 	if me.nextHandler != nil {
 		return me.nextHandler.Init()
@@ -113,7 +112,7 @@ func (me *PostgreSQLHandler) insertRequest(req *FancyRequest) error {
 		req.BodyBytes,
 	)
 
-	log.Printf("Insert returned result=%+v, err=%+v", r, err)
+	Debugf("Insert returned result=%+v, err=%+v\n", r, err)
 	return err
 }
 
@@ -141,8 +140,8 @@ func (me *PostgreSQLHandler) selectNow() error {
 	_, err := me.db.Exec(`SELECT now() "mithril ping test";`)
 
 	if err != nil {
-		log.Println("PostgreSQL failed to execute 'SELECT now()':", err)
-		log.Println("Is PostgreSQL running?")
+		Debugln("PostgreSQL failed to execute 'SELECT now()':", err)
+		Debugln("Is PostgreSQL running?")
 	}
 
 	return err

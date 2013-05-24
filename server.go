@@ -3,7 +3,6 @@ package mithril
 import (
 	"encoding/base64"
 	"fmt"
-	"log"
 	"net/http"
 )
 
@@ -57,7 +56,7 @@ func (me *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	)
 
 	defer func() {
-		log.Printf("\"%v %v %v\" %v -", r.Method, r.URL, r.Proto, status)
+		Debugf("\"%v %v %v\" %v -\n", r.Method, r.URL, r.Proto, status)
 	}()
 
 	if r.Method == "GET" && r.URL.Path == "/favicon.ico" {
