@@ -9,21 +9,23 @@ env:
   - MITHRIL_PG_URI='postgres://postgres@localhost?sslmode=disable'
   - MITHRIL_PG_DB_NAME='postgres'
   - MITHRIL_PG_USER='postgres'
-  - secure: ! 'XQ6DaZRsG2jrFYnCZKYjPFdMyAn124CKRm0QLWcdmdLZjuYUMxCqXsme+Dps
+  - secure: ! 'bQqPFIEGmcrIvaz0woB1WhzMebkBdMU90A+N16Qmgmwni1hAwXbbZfQFT8S1
 
-      bD/VLujRdFH2vQ6E1vLZFsHThPbFGthsk7TpqnlmWK2XMwfxu+u5ScmKVHjj
+      bWyCgvpVmhdMTMjM4Uqvz3JRL+6/nKoq0X88LYLGmKF34cXt2i8lbNOxkhSl
 
-      OVMgWJ1E+rp6JRFXPwElIUafF8DdhCP2psjoSW+bllpk+1XT4u4='
-  - secure: ! 'jvtPq/Rly6kGnt8fDEQjmFKO/wO1GlnWFkUz3bbhpjBC+Bb7wbYVkCgZ/MU6
+      LWhP8xWxOZn9NA/a55kZL/BpYxIc4E8mu18sIQxE1jzHg13c6+o='
 
-      KZO53L6qygDOigA+dhit0JmLMJHOuvhU68hmotvCcAbPMK/TaWigvfGaHpYo
+  - secure: ! 'DnIbKKDlg+CJL5Dcb4Q7pTz++vdzLd4aHKULOWTM7CoXIBuj8pbAjEB1Jg3r
 
-      a2Zd0SMWwHYpkKUR+z70myetzdGbspPnD4ipsAQzFaT8/ZzTqI4='
-  - secure: ! 'rvw3oFZcX12P3CdLvP9auZH5S01sdZ89vm/oacTI4Gm65Q8Rf6g94FpLfK+Y
+      KJQXY80fv45F4hR/ct50nkXySPIZRgVNcG+Q6Yq4urYkBE0YodcAPCytlheD
 
-      d+C6XSPIL89YEC0JhjqyLNlT2B2zjSUKLRO8xMoy9LVDrf2eEilbDowBPMts
+      vE8yL3T8qKypsQHg3PDF3ShVOgdyzWozKRRbDluWYsjac1puSEU='
 
-      GfyqS0sSAc2PCau42frH4lrvsl7mSD3QD6OV3qiPvzfkJUDAQXo='
+  - secure: ! 'hye7R3WnaQRUwtHh0t+JThpwwuXux/3aBc7DmovWAt99zfGm8MhNtU6KAssK
+
+      wSJcw+iWoRsRZ0r8TYzZxZDnRLnfIOgK3oceqEGhGaaOxP2RGiNdveqxwnjT
+
+      HaD9pTqPeK7y2tsuLUhBPk1Q0OYp3TXZFaxwFI9JCjnoYw4sg5o='
   matrix:
   - MITHRIL_PG_ENABLED='true' GO_TAG_ARGS='-tags full'
   - MITHRIL_PG_ENABLED='false' GO_TAG_ARGS=''
@@ -39,13 +41,18 @@ before_install:
 - chmod +x tb
 - popd
 - tb setup-aws
-- if tb nopr ; then tb install-travis-artifacts ; fi
+- if tb nopr ; then
+    tb install-travis-artifacts ;
+  fi
 install: cd $TRAVIS_BUILD_DIR && make build
 script: cd $TRAVIS_BUILD_DIR && make golden
 after_success:
-- if tb nopr ; then tb upload-go-artifacts --encrypt ; tb upload-artifact artifacts/binaries/$(go
-  env GOOS)/$(go env GOARCH)/mithril/$TRAVIS_COMMIT/ --encrypt ; fi
+- if tb nopr ; then
+    tb upload-go-artifacts --encrypt ;
+    tb upload-artifact artifacts/binaries/$(go env GOOS)/$(go env GOARCH)/mithril/$TRAVIS_COMMIT/
+      --encrypt ;
+  fi
 notifications:
   email:
     recipients:
-    - flintknappers+mithril@modcloth.com
+      - flintknappers+mithril@modcloth.com
