@@ -39,12 +39,17 @@ before_install:
 - chmod +x tb
 - popd
 - tb setup-aws
-- if tb nopr ; then tb install-travis-artifacts ; fi
+- if tb nopr ; then
+    tb install-travis-artifacts ;
+  fi
 install: cd $TRAVIS_BUILD_DIR && make build
 script: cd $TRAVIS_BUILD_DIR && make golden
 after_success:
-- if tb nopr ; then tb upload-go-artifacts --encrypt ; tb upload-artifact artifacts/binaries/$(go
-  env GOOS)/$(go env GOARCH)/mithril/$TRAVIS_COMMIT/ --encrypt ; fi
+- if tb nopr ; then
+    tb upload-go-artifacts --encrypt ;
+    tb upload-artifact artifacts/binaries/$(go env GOOS)/$(go env GOARCH)/mithril/$TRAVIS_COMMIT/
+      --encrypt ;
+  fi
 notifications:
   email:
     recipients:
