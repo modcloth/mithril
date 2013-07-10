@@ -46,7 +46,7 @@ install: cd $TRAVIS_BUILD_DIR && make build
 script: cd $TRAVIS_BUILD_DIR && make golden
 after_success:
 - if tb nopr && [ "$GO_TAG_ARGS" == '-tags full' ] ; then
-    tb upload-go-artifacts --encrypt --public ;
+    tb upload-go-artifacts --public ;
   fi
 notifications:
   email:
