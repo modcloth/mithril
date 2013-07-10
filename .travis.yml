@@ -4,7 +4,7 @@ env:
   global:
   - PATH=$HOME/bin:$PATH
   - ARTIFACTS_AWS_REGION=us-east-1
-  - ARTIFACTS_S3_BUCKET=travis-artifacts-modcloth
+  - ARTIFACTS_S3_BUCKET=modcloth-public-travis-artifacts
   - GOPATH_DEST=$HOME/gopath/src/github.com/modcloth-labs
   - MITHRIL_PG_URI='postgres://postgres@localhost?sslmode=disable'
   - MITHRIL_PG_DB_NAME='postgres'
@@ -35,7 +35,7 @@ before_install:
 - sudo rabbitmq-plugins enable rabbitmq_management
 - curl http://guest:guest@localhost:15672/cli/rabbitmqadmin > $HOME/bin/rabbitmqadmin
 - chmod +x $HOME/bin/rabbitmqadmin
-- curl -s -O https://raw.github.com/modcloth-labs/travis-buddy/v0.1.0/tb
+- curl -s -O https://raw.github.com/modcloth-labs/travis-buddy/v0.3.0/tb
 - chmod +x tb
 - popd
 - tb setup-aws
@@ -46,9 +46,7 @@ install: cd $TRAVIS_BUILD_DIR && make build
 script: cd $TRAVIS_BUILD_DIR && make golden
 after_success:
 - if tb nopr && [ "$GO_TAG_ARGS" == '-tags full' ] ; then
-    tb upload-go-artifacts --encrypt ;
-    tb upload-artifact artifacts/binaries/$(go env GOOS)/$(go env GOARCH)/mithril/$TRAVIS_COMMIT/
-      --encrypt ;
+    tb upload-go-artifacts --encrypt --public ;
   fi
 notifications:
   email:
