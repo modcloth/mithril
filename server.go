@@ -2,8 +2,11 @@ package mithril
 
 import (
 	"encoding/base64"
+	"flag"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 )
 
 const faviconBase64 = `
@@ -31,10 +34,63 @@ dr/zMna/8zJ2v/Mydr/zMna/8zJ2v/////////////////////////////////////////
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
 `
 
-var faviconBytes []byte
+var (
+	faviconBytes []byte
+
+	addrFlag = flag.String("a", ":8371", "Mithril server address")
+
+	amqpUriFlag = flag.String("amqp.uri",
+		"amqp://guest:guest@localhost:5672", "AMQP Server URI")
+	pipelineCallbacks = map[string]func(Handler) Handler{}
+	pipelineOrder     = []string{"debug", "pg"}
+
+	pidFlag = flag.String("p", "", "PID file (only written if provided)")
+)
 
 func init() {
 	faviconBytes, _ = base64.StdEncoding.DecodeString(faviconBase64)
+}
+
+func ServerMain() {
+	flag.Usage = func() {
+		fmt.Println("Usage: mithril-server [options]")
+		flag.PrintDefaults()
+	}
+	flag.Parse()
+
+	if len(*pidFlag) > 0 {
+		var (
+			f   *os.File
+			err error
+		)
+
+		if f, err = os.Create(*pidFlag); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Fprintf(f, "%d\n", os.Getpid())
+	}
+
+	var pipeline Handler
+
+	server := NewServer()
+	pipeline = NewAMQPHandler(*amqpUriFlag, nil)
+
+	for _, name := range pipelineOrder {
+		if callback, ok := pipelineCallbacks[name]; ok {
+			Debugf("Calling %q pipeline callback\n", name)
+			pipeline = callback(pipeline)
+		}
+	}
+
+	if err := pipeline.Init(); err != nil {
+		log.Fatalf("Failed to initialize handler pipeline: %q", err)
+	}
+
+	server.SetHandlerPipeline(pipeline)
+	http.Handle("/", server)
+
+	log.Println("Serving on", *addrFlag)
+	log.Fatal(http.ListenAndServe(*addrFlag, nil))
 }
 
 type Server struct {

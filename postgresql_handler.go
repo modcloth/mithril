@@ -4,12 +4,17 @@ package mithril
 
 import (
 	"database/sql"
+	"flag"
 	"fmt"
 
 	"github.com/lib/pq"
 )
 
 var (
+	enablePgFlag = flag.Bool("pg", false, "Enable PostgreSQL handler")
+	pgUriFlag    = flag.String("pg.uri",
+		"postgres://localhost?sslmode=disable", "PostgreSQL Server URI")
+
 	dbIsNil      = fmt.Errorf("PostgreSQL handler database is nil!")
 	pgMigrations = map[string][]string{
 		"20120505000000": {`
@@ -32,6 +37,18 @@ var (
 		},
 	}
 )
+
+func init() {
+	pipelineCallbacks["pg"] = func(pipeline Handler) Handler {
+		if *enablePgFlag {
+			Debugln("  --> pg enabled, so adding postgresql handler")
+			pipeline = NewPostgreSQLHandler(*pgUriFlag, pipeline)
+		} else {
+			Debugln("  --> pg not enabled, so leaving pipeline unaltered")
+		}
+		return pipeline
+	}
+}
 
 type PostgreSQLHandler struct {
 	connUri     string
