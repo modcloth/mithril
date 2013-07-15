@@ -62,14 +62,14 @@ func (me *AMQPHandler) HandleRequest(req *FancyRequest) error {
 		return err
 	}
 
+	defer me.disconnect()
+
 	amqpReq = me.adaptHttpRequest(req)
 
 	if err = me.publishAdaptedRequest(amqpReq); err != nil {
 		Debugln("Failed to publish request:", err)
 		return err
 	}
-
-	defer me.disconnect()
 
 	return nil
 }
