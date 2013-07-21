@@ -3,8 +3,8 @@ LIBS := \
 TARGETS := \
   $(LIBS) \
   github.com/modcloth-labs/mithril/mithril-server
-REV_VAR := github.com/modcloth-labs/versioning.RevString
-VERSION_VAR := github.com/modcloth-labs/versioning.VersionString
+REV_VAR := github.com/modcloth-labs/mithril.RevString
+VERSION_VAR := github.com/modcloth-labs/mithril.VersionString
 REPO_VERSION := $(shell git describe --always --dirty --tags)
 REPO_REV := $(shell git rev-parse --sq HEAD)
 GOBUILD_VERSION_ARGS := -ldflags "-X $(REV_VAR) $(REPO_REV) -X $(VERSION_VAR) $(REPO_VERSION)"
