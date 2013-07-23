@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 )
 
 const faviconBase64 = `
@@ -37,7 +38,9 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
 var (
 	faviconBytes []byte
 
-	addrFlag = flag.String("a", ":8371", "Mithril server address")
+	addrFlag    = flag.String("a", ":8371", "Mithril server address")
+	versionFlag = false
+	revFlag     = false
 
 	amqpUriFlag = flag.String("amqp.uri",
 		"amqp://guest:guest@localhost:5672", "AMQP Server URI")
@@ -45,10 +48,15 @@ var (
 	pipelineOrder     = []string{"debug", "pg"}
 
 	pidFlag = flag.String("p", "", "PID file (only written if provided)")
+
+	VersionString string
+	RevString     string
 )
 
 func init() {
 	faviconBytes, _ = base64.StdEncoding.DecodeString(faviconBase64)
+	flag.BoolVar(&versionFlag, "version", false, "Print version and exit")
+	flag.BoolVar(&revFlag, "rev", false, "Print git revision and exit")
 }
 
 func ServerMain() {
@@ -57,6 +65,23 @@ func ServerMain() {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
+
+	if versionFlag {
+		progName := path.Base(os.Args[0])
+		if VersionString == "" {
+			VersionString = "<unknown>"
+		}
+		fmt.Printf("%s %s\n", progName, VersionString)
+		os.Exit(0)
+	}
+
+	if revFlag {
+		if RevString == "" {
+			RevString = "<unknown>"
+		}
+		fmt.Println(RevString)
+		os.Exit(0)
+	}
 
 	if len(*pidFlag) > 0 {
 		var (
