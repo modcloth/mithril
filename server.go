@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 )
 
 const faviconBase64 = `
@@ -34,6 +35,9 @@ dr/zMna/8zJ2v/Mydr/zMna/8zJ2v/////////////////////////////////////////
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
 `
 
+var VersionFlag = false
+var RevFlag = false
+
 var (
 	faviconBytes []byte
 
@@ -45,10 +49,15 @@ var (
 	pipelineOrder     = []string{"debug", "pg"}
 
 	pidFlag = flag.String("p", "", "PID file (only written if provided)")
+
+	VersionString string
+	RevString     string
 )
 
 func init() {
 	faviconBytes, _ = base64.StdEncoding.DecodeString(faviconBase64)
+	flag.BoolVar(&VersionFlag, "version", false, "Print version and exit")
+	flag.BoolVar(&RevFlag, "rev", false, "Print git revision and exit")
 }
 
 func ServerMain() {
@@ -57,6 +66,23 @@ func ServerMain() {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
+
+	if VersionFlag {
+		progName := path.Base(os.Args[0])
+		if VersionString == "" {
+			VersionString = "<unknown>"
+		}
+		fmt.Printf("%s %s\n", progName, VersionString)
+		os.Exit(0)
+	}
+
+	if RevFlag {
+		if RevString == "" {
+			RevString = "<unknown>"
+		}
+		fmt.Println(RevString)
+		os.Exit(0)
+	}
 
 	if len(*pidFlag) > 0 {
 		var (
