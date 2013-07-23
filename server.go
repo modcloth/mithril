@@ -35,13 +35,12 @@ dr/zMna/8zJ2v/Mydr/zMna/8zJ2v/////////////////////////////////////////
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
 `
 
-var VersionFlag = false
-var RevFlag = false
-
 var (
 	faviconBytes []byte
 
-	addrFlag = flag.String("a", ":8371", "Mithril server address")
+	addrFlag    = flag.String("a", ":8371", "Mithril server address")
+	versionFlag = false
+	revFlag     = false
 
 	amqpUriFlag = flag.String("amqp.uri",
 		"amqp://guest:guest@localhost:5672", "AMQP Server URI")
@@ -56,8 +55,8 @@ var (
 
 func init() {
 	faviconBytes, _ = base64.StdEncoding.DecodeString(faviconBase64)
-	flag.BoolVar(&VersionFlag, "version", false, "Print version and exit")
-	flag.BoolVar(&RevFlag, "rev", false, "Print git revision and exit")
+	flag.BoolVar(&versionFlag, "version", false, "Print version and exit")
+	flag.BoolVar(&revFlag, "rev", false, "Print git revision and exit")
 }
 
 func ServerMain() {
@@ -67,7 +66,7 @@ func ServerMain() {
 	}
 	flag.Parse()
 
-	if VersionFlag {
+	if versionFlag {
 		progName := path.Base(os.Args[0])
 		if VersionString == "" {
 			VersionString = "<unknown>"
@@ -76,7 +75,7 @@ func ServerMain() {
 		os.Exit(0)
 	}
 
-	if RevFlag {
+	if revFlag {
 		if RevString == "" {
 			RevString = "<unknown>"
 		}
