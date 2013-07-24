@@ -112,11 +112,12 @@ func (me *AMQPHandler) disconnect() {
 func (me *AMQPHandler) adaptHttpRequest(req *FancyRequest) *amqpAdaptedRequest {
 	return &amqpAdaptedRequest{
 		Publishing: &amqp.Publishing{
-			MessageId:   req.MessageId,
-			Timestamp:   req.Timestamp,
-			AppId:       req.AppId,
-			ContentType: req.ContentType,
-			Body:        req.BodyBytes,
+			MessageId:     req.MessageId,
+			CorrelationId: req.CorrelationId,
+			Timestamp:     req.Timestamp,
+			AppId:         req.AppId,
+			ContentType:   req.ContentType,
+			Body:          req.BodyBytes,
 		},
 		Exchange:   req.Exchange,
 		RoutingKey: req.RoutingKey,
