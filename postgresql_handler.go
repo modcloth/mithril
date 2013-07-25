@@ -21,6 +21,7 @@ var (
 			CREATE TABLE IF NOT EXISTS mithril_requests (
 				id serial PRIMARY KEY,
 				message_id character varying(128) NOT NULL,
+				correlation_id character varying(128) NOT NULL,
 				created_at timestamp without time zone NOT NULL,
 				app_id character varying(128) NOT NULL,
 				content_type character varying(64) NOT NULL,
@@ -106,6 +107,7 @@ func (me *PostgreSQLHandler) insertRequest(req *FancyRequest) error {
 	r, err := me.db.Exec(`
 		INSERT INTO mithril_requests (
 			message_id,
+			correlation_id,
 			created_at,
 			app_id,
 			content_type,
@@ -116,9 +118,10 @@ func (me *PostgreSQLHandler) insertRequest(req *FancyRequest) error {
 			body_bytes
 		)
 		VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10
 		)`,
 		req.MessageId,
+		req.CorrelationId,
 		req.Timestamp,
 		req.AppId,
 		req.ContentType,
