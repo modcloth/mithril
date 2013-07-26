@@ -33,12 +33,10 @@ func NewAMQPHandler(amqpUri string, next Handler) *AMQPHandler {
 }
 
 func (me *AMQPHandler) Init() error {
-	var err error
 
-	if err = me.establishConnection(); err != nil {
-		return err
+	if err := me.establishConnection(); err != nil {
+		panic(err)
 	}
-
 	log.Println("AMQP handler initialized")
 
 	if me.nextHandler != nil {
@@ -58,19 +56,12 @@ func (me *AMQPHandler) HandleRequest(req *FancyRequest) error {
 		err     error
 	)
 
-	if err = me.establishConnection(); err != nil {
-		return err
-	}
-
-	defer me.disconnect()
-
 	amqpReq = me.adaptHttpRequest(req)
 
 	if err = me.publishAdaptedRequest(amqpReq); err != nil {
 		log.Println("Failed to publish request:", err)
 		return err
 	}
-
 	return nil
 }
 
