@@ -6,14 +6,14 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"log"
 
 	"github.com/lib/pq"
 )
 
 var (
 	enablePgFlag = flag.Bool("pg", false, "Enable PostgreSQL handler")
-	pgUriFlag    = flag.String("pg.uri",
-		"postgres://localhost?sslmode=disable", "PostgreSQL Server URI")
+	pgUriFlag    = flag.String("pg.uri", "postgres://localhost?sslmode=disable", "PostgreSQL Server URI")
 
 	dbIsNil      = fmt.Errorf("PostgreSQL handler database is nil!")
 	pgMigrations = map[string][]string{
@@ -98,7 +98,7 @@ func (me *PostgreSQLHandler) insertRequest(req *FancyRequest) error {
 		return dbIsNil
 	}
 
-	r, err := me.db.Exec(`
+	_, err := me.db.Exec(`
 		INSERT INTO mithril_requests (
 			message_id,
 			created_at,
@@ -124,7 +124,6 @@ func (me *PostgreSQLHandler) insertRequest(req *FancyRequest) error {
 		req.BodyBytes,
 	)
 
-	Debugf("Insert returned result=%+v, err=%+v\n", r, err)
 	return err
 }
 
