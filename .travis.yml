@@ -51,4 +51,4 @@ after_success:
 notifications:
   email:
     recipients:
-    - flintknappers+mithril@modcloth.com
+    - github+mithril@modcloth.com
