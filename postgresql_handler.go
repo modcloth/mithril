@@ -21,7 +21,6 @@ var (
 			CREATE TABLE IF NOT EXISTS mithril_requests (
 				id serial PRIMARY KEY,
 				message_id character varying(128) NOT NULL,
-				correlation_id character varying(128) NOT NULL,
 				created_at timestamp without time zone NOT NULL,
 				app_id character varying(128) NOT NULL,
 				content_type character varying(64) NOT NULL,
@@ -35,6 +34,9 @@ var (
 			`CREATE INDEX mithril_app_ids ON mithril_requests (app_id);`,
 			`CREATE INDEX mithril_exchanges ON mithril_requests (exchange);`,
 			`CREATE INDEX mithril_routing_keys ON mithril_requests (routing_key);`,
+		},
+		"20130725000000": {
+			`ALTER TABLE mithril_requests ADD COLUMN correlation_id character varying(128) NOT NULL`,
 		},
 	}
 )
