@@ -3,7 +3,7 @@ package mithril
 import (
 	"fmt"
 
-	"github.com/streadway/amqp"
+	"amqp"
 )
 
 type amqpAdaptedRequest struct {
