@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"path"
 )
@@ -42,8 +43,7 @@ var (
 	versionFlag = false
 	revFlag     = false
 
-	amqpUriFlag = flag.String("amqp.uri",
-		"amqp://guest:guest@localhost:5672", "AMQP Server URI")
+	amqpUriFlag = flag.String("amqp.uri", "amqp://guest:guest@localhost:5672", "AMQP Server URI")
 	pipelineCallbacks = map[string]func(Handler) Handler{}
 	pipelineOrder     = []string{"debug", "pg"}
 
@@ -102,7 +102,6 @@ func ServerMain() {
 
 	for _, name := range pipelineOrder {
 		if callback, ok := pipelineCallbacks[name]; ok {
-			Debugf("Calling %q pipeline callback\n", name)
 			pipeline = callback(pipeline)
 		}
 	}
@@ -135,10 +134,6 @@ func (me *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		status int
 		err    error
 	)
-
-	defer func() {
-		Debugf("\"%v %v %v\" %v -\n", r.Method, r.URL, r.Proto, status)
-	}()
 
 	if r.Method == "GET" && r.URL.Path == "/favicon.ico" {
 		status = http.StatusOK

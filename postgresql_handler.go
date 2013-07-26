@@ -41,10 +41,7 @@ var (
 func init() {
 	pipelineCallbacks["pg"] = func(pipeline Handler) Handler {
 		if *enablePgFlag {
-			Debugln("  --> pg enabled, so adding postgresql handler")
 			pipeline = NewPostgreSQLHandler(*pgUriFlag, pipeline)
-		} else {
-			Debugln("  --> pg not enabled, so leaving pipeline unaltered")
 		}
 		return pipeline
 	}
@@ -76,8 +73,6 @@ func (me *PostgreSQLHandler) Init() error {
 	if err = me.ensureSchemaPresent(); err != nil {
 		return err
 	}
-
-	Debugln("PostgreSQL handler initialized")
 
 	if me.nextHandler != nil {
 		return me.nextHandler.Init()
@@ -157,8 +152,8 @@ func (me *PostgreSQLHandler) selectNow() error {
 	_, err := me.db.Exec(`SELECT now() "mithril ping test";`)
 
 	if err != nil {
-		Debugln("PostgreSQL failed to execute 'SELECT now()':", err)
-		Debugln("Is PostgreSQL running?")
+		log.Println("PostgreSQL failed to execute 'SELECT now()':", err)
+		log.Println("Is PostgreSQL running?")
 	}
 
 	return err
