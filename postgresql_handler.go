@@ -35,6 +35,9 @@ var (
 			`CREATE INDEX mithril_exchanges ON mithril_requests (exchange);`,
 			`CREATE INDEX mithril_routing_keys ON mithril_requests (routing_key);`,
 		},
+		"20130725000000": {
+			`ALTER TABLE mithril_requests ADD COLUMN correlation_id character varying(128) NOT NULL`,
+		},
 	}
 )
 
@@ -106,6 +109,7 @@ func (me *PostgreSQLHandler) insertRequest(req *FancyRequest) error {
 	r, err := me.db.Exec(`
 		INSERT INTO mithril_requests (
 			message_id,
+			correlation_id,
 			created_at,
 			app_id,
 			content_type,
@@ -116,9 +120,10 @@ func (me *PostgreSQLHandler) insertRequest(req *FancyRequest) error {
 			body_bytes
 		)
 		VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10
 		)`,
 		req.MessageId,
+		req.CorrelationId,
 		req.Timestamp,
 		req.AppId,
 		req.ContentType,

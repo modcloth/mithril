@@ -9,15 +9,16 @@ import (
 )
 
 type FancyRequest struct {
-	MessageId   string
-	Timestamp   time.Time
-	AppId       string
-	ContentType string
-	Exchange    string
-	RoutingKey  string
-	Mandatory   bool
-	Immediate   bool
-	BodyBytes   []byte
+	MessageId     string
+	CorrelationId string
+	Timestamp     time.Time
+	AppId         string
+	ContentType   string
+	Exchange      string
+	RoutingKey    string
+	Mandatory     bool
+	Immediate     bool
+	BodyBytes     []byte
 
 	*http.Request
 }
@@ -51,7 +52,8 @@ func NewFancyRequest(req *http.Request) (*FancyRequest, error) {
 	}
 
 	return &FancyRequest{
-		req.Header.Get("Message-ID"), // MessageID
+		req.Header.Get("Message-ID"),     // MessageID
+		req.Header.Get("Correlation-ID"), //CorrelationID
 		// FIXME parse "Date" header?
 		time.Now().UTC(),               // Timestamp
 		req.Header.Get("From"),         // AppId
