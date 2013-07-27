@@ -4,6 +4,7 @@ VERSION_VAR := mithril.VersionString
 REPO_VERSION := $(shell git describe --always --dirty --tags)
 REPO_REV := $(shell git rev-parse --sq HEAD)
 GOBUILD_VERSION_ARGS := -ldflags "-X $(REV_VAR) $(REPO_REV) -X $(VERSION_VAR) $(REPO_VERSION)"
+JOHNNY_DEPS_REV := f2af161b01bcda148859a0f7d0524769186b339b
 
 
 GO_TAG_ARGS ?= -tags full
@@ -20,13 +21,22 @@ build: deps
 	go install $(GOBUILD_VERSION_ARGS) $(GO_TAG_ARGS) -x $(LIBS)
 	go build -o $${GOPATH%%:*}/bin/mithril-server ./mithril-server
 
-deps:
+deps: johnny_deps
 	if [ ! -L $${GOPATH%%:*}/src/mithril ] ; then gvm linkthis ; fi
-	./install-deps ./deps.txt
+	./johnny_deps
+
+johnny_deps:
+	curl -s -o $@ https://raw.github.com/meatballhat/johnny-deps/$(JOHNNY_DEPS_REV)/bin/johnny_deps
+	chmod +x $@
 
 clean:
 	go clean -x $(LIBS) || true
-	find $${GOPATH%%:*}/pkg -name '*mithril*' -exec rm -v {} \;
+	if [ -d $${GOPATH%%:*}/pkg ] ; then \
+		find $${GOPATH%%:*}/pkg -name '*mithril*' -exec rm -v {} \; ; \
+	fi
+
+distclean: clean
+	rm -f ./johnny_deps
 
 serve:
 	$${GOPATH%%:*}/bin/mithril-server -d -a $(ADDR)
@@ -34,4 +44,4 @@ serve:
 golden: test
 	./runtests -v
 
-.PHONY: all build deps test clean serve
+.PHONY: all build deps test clean distclean serve
