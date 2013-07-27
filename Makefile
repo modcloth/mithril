@@ -12,9 +12,9 @@ GO_TAG_ARGS ?= -tags full
 ADDR := :8371
 export ADDR
 
-all: golden
+all: clean golden
 
-test: clean build
+test: build
 	go test $(GO_TAG_ARGS) -x $(LIBS)
 
 build: deps
