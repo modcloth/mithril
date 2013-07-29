@@ -51,17 +51,18 @@ func (me *AMQPHandler) SetNextHandler(handler Handler) {
 }
 
 func (me *AMQPHandler) HandleRequest(req *FancyRequest) error {
-	var (
-		amqpReq *amqpAdaptedRequest
-		err     error
-	)
+    // commented out to get baseline request metrics
+	//var (
+		//amqpReq *amqpAdaptedRequest
+		//err     error
+	//)
 
-	amqpReq = me.adaptHttpRequest(req)
+	//amqpReq = me.adaptHttpRequest(req)
 
-	if err = me.publishAdaptedRequest(amqpReq); err != nil {
-		log.Println("Failed to publish request:", err)
-		return err
-	}
+	//if err = me.publishAdaptedRequest(amqpReq); err != nil {
+		//log.Println("Failed to publish request:", err)
+		//return err
+	//}
 	return nil
 }
 
