@@ -7,7 +7,7 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/lib/pq"
+	"github.com/lib/pq" // explicitly cloned into place
 )
 
 var (

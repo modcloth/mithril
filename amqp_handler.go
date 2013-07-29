@@ -3,7 +3,7 @@ package mithril
 import (
 	"fmt"
 
-	"github.com/streadway/amqp"
+	"github.com/streadway/amqp" // explicitly cloned into place
 )
 
 type amqpAdaptedRequest struct {
