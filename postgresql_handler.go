@@ -36,7 +36,7 @@ var (
 			`CREATE INDEX mithril_routing_keys ON mithril_requests (routing_key);`,
 		},
 		"20130725000000": {
-			`ALTER TABLE mithril_requests ADD COLUMN correlation_id character varying(128) NOT NULL`,
+			`ALTER TABLE mithril_requests ADD COLUMN correlation_id character varying(128)`,
 		},
 	}
 )
