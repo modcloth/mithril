@@ -1,6 +1,6 @@
 package main
 
-import "github.com/modcloth-labs/mithril"
+import "mithril"
 
 func main() {
 	mithril.ServerMain()
