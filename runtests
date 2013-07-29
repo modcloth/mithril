@@ -104,6 +104,31 @@ if PG_ENABLED
   end
 end
 
+%w(rev version).each do |arg|
+  describe "testing the #{arg} arg" do
+    let(:server) do
+      ServerRunner.new(
+        port: rand(9450..9499),
+        start: Time.now.utc,
+        pidfile: File.expand_path('../log/rev-arg-test-server.pid', __FILE__),
+        extra_args: "-#{arg}"
+      )
+    end
+
+    before do
+      server.start
+    end
+
+    it "produces a valid #{arg}" do
+      File.read(server.logfile).wont_match(/<unknown>/)
+    end
+
+    after do
+      server.stop
+    end
+  end
+end
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 def main(argv = [].freeze)
