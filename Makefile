@@ -1,6 +1,6 @@
 LIBS := mithril
-REV_VAR := mithril.RevString
-VERSION_VAR := mithril.VersionString
+REV_VAR := mithril.Rev
+VERSION_VAR := mithril.Version
 REPO_VERSION := $(shell git describe --always --dirty --tags)
 REPO_REV := $(shell git rev-parse --sq HEAD)
 GOBUILD_VERSION_ARGS := -ldflags "-X $(REV_VAR) $(REPO_REV) -X $(VERSION_VAR) $(REPO_VERSION)"
