@@ -4,9 +4,11 @@ import (
 	"encoding/base64"
 	"flag"
 	"fmt"
-	"log"
+	"mithril/log"
 	"net/http"
 	"os"
+
+	_ "net/http/pprof" // hey, why not
 )
 
 const faviconBase64 = `
@@ -41,8 +43,7 @@ var (
 	versionFlag = false
 	revFlag     = false
 
-	amqpUriFlag = flag.String("amqp.uri",
-		"amqp://guest:guest@localhost:5672", "AMQP Server URI")
+	amqpUriFlag       = flag.String("amqp.uri", "amqp://guest:guest@localhost:5672", "AMQP Server URI")
 	pipelineCallbacks = map[string]func(Handler) Handler{}
 	pipelineOrder     = []string{"debug", "pg"}
 
@@ -92,7 +93,7 @@ func ServerMain() {
 
 	for _, name := range pipelineOrder {
 		if callback, ok := pipelineCallbacks[name]; ok {
-			Debugf("Calling %q pipeline callback\n", name)
+			log.Println("Calling %q pipeline callback\n", name)
 			pipeline = callback(pipeline)
 		}
 	}
@@ -126,8 +127,8 @@ func (me *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		err    error
 	)
 
-	defer func() {
-		Debugf("\"%v %v %v\" %v -\n", r.Method, r.URL, r.Proto, status)
+	defer func() { // defer to capture status on the method exit
+		log.Println("\"%v %v %v\" %v -\n", r.Method, r.URL, r.Proto, status)
 	}()
 
 	if r.Method == "GET" && r.URL.Path == "/favicon.ico" {

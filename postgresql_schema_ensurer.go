@@ -5,7 +5,7 @@ package mithril
 import (
 	"database/sql"
 	"fmt"
-	"log"
+	"mithril/log"
 )
 
 // This happens to be in the `mithril` package for now, but the intent is that
@@ -52,8 +52,7 @@ func (me *pgSchemaEnsurer) Migrate(migrations map[string][]string) error {
 func (me *pgSchemaEnsurer) containsMigration(schemaVersion string) bool {
 	var count int
 
-	q := fmt.Sprintf(`
-		SELECT COUNT(*) FROM %s WHERE version = $1`, me.schemaTable)
+	q := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE version = $1", me.schemaTable)
 	if err := me.db.QueryRow(q, schemaVersion).Scan(&count); err != nil {
 		return false
 	}
@@ -73,7 +72,7 @@ func (me *pgSchemaEnsurer) migrateTo(schemaVersion string, sqls []string) error 
 
 	for _, sql := range sqls {
 		if _, err = tx.Exec(sql); err != nil {
-			defer tx.Rollback()
+			tx.Rollback()
 			return err
 		}
 	}
@@ -81,7 +80,7 @@ func (me *pgSchemaEnsurer) migrateTo(schemaVersion string, sqls []string) error 
 	q := fmt.Sprintf(`INSERT INTO %s VALUES ($1)`, me.schemaTable)
 	if _, err = tx.Exec(q, schemaVersion); err != nil {
 
-		defer tx.Rollback()
+		tx.Rollback()
 		return err
 	}
 
