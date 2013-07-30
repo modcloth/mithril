@@ -38,7 +38,7 @@ ln -s $PWD ${GOPATH%%:*}/src/mithril
 
 In order to test the PostgreSQL integration, you will also have to have
 a PostgreSQL server available.  The default URI used by the tests is the
-following, which requires the presence of a `mithril_test` databasa:
+following, which requires the presence of a `mithril_test` database:
 
 ```
 postgres://localhost/mithril_test?sslmode=disable
