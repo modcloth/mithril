@@ -9,7 +9,7 @@ class ServerRunner
     @addr = options[:port] ? ":#{options[:port]}" : ENV['ADDR']
     @port = (options[:port] || ENV['ADDR'] || '9494').to_s.gsub(/:/, '').to_i
     @logfile = File.expand_path(
-      "../../log/mithril-server-#{start}-#{port}.log",
+      "../../.artifacts/mithril-server-#{start}-#{port}.log",
       __FILE__
     )
     @pidfile = (options[:pidfile] || "mithril-server-#{@port}.pid")

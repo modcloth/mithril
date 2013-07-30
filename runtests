@@ -20,14 +20,14 @@ $servers = {
   amqp_only: ServerRunner.new(
     port: rand(9400..9449),
     start: Time.now.utc,
-    pidfile: File.expand_path('../log/mithril-server-amqp-only.pid', __FILE__),
+    pidfile: File.expand_path('../.artifacts/mithril-server-amqp-only.pid', __FILE__),
   ),
 }
 if PG_ENABLED
   $servers[:with_pg] = ServerRunner.new(
     port: rand(9450..9499),
     start: Time.now.utc,
-    pidfile: File.expand_path('../log/mithril-server-with-pg.pid', __FILE__),
+    pidfile: File.expand_path('../.artifacts/mithril-server-with-pg.pid', __FILE__),
     extra_args: "-pg -pg.uri='#{PG_URI}'"
   )
 end
@@ -110,7 +110,7 @@ end
       ServerRunner.new(
         port: rand(9450..9499),
         start: Time.now.utc,
-        pidfile: File.expand_path('../log/rev-arg-test-server.pid', __FILE__),
+        pidfile: File.expand_path('../.artifacts/rev-arg-test-server.pid', __FILE__),
         extra_args: "-#{arg}"
       )
     end
@@ -153,7 +153,7 @@ def main(argv = [].freeze)
   raise "Couldn't declare exchange pg_exchange_#{SUITE_LOAD_START}" if $? != 0
 
   Dir.chdir(File.expand_path('../', __FILE__)) do
-    FileUtils.mkdir_p('./log')
+    FileUtils.mkdir_p('./.artifacts')
     $servers.each do |_,runner|
       runner.start
     end
