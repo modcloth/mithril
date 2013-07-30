@@ -4,7 +4,7 @@ VERSION_VAR := mithril.Version
 REPO_VERSION := $(shell git describe --always --dirty --tags)
 REPO_REV := $(shell git rev-parse --sq HEAD)
 GOBUILD_VERSION_ARGS := -ldflags "-X $(REV_VAR) $(REPO_REV) -X $(VERSION_VAR) $(REPO_VERSION)"
-JOHNNY_DEPS_REV := f2af161b01bcda148859a0f7d0524769186b339b
+JOHNNY_DEPS_REV := e6b460b
 
 
 GO_TAG_ARGS ?= -tags full
@@ -26,7 +26,7 @@ deps: johnny_deps
 	./johnny_deps
 
 johnny_deps:
-	curl -s -o $@ https://raw.github.com/meatballhat/johnny-deps/$(JOHNNY_DEPS_REV)/bin/johnny_deps
+	curl -s -o $@ https://raw.github.com/VividCortex/johnny-deps/$(JOHNNY_DEPS_REV)/bin/johnny_deps
 	chmod +x $@
 
 clean:
