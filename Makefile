@@ -19,7 +19,7 @@ test: build
 
 build: deps
 	go install $(GOBUILD_VERSION_ARGS) $(GO_TAG_ARGS) -x $(LIBS)
-	go build -o $${GOPATH%%:*}/bin/mithril-server ./mithril-server
+	go build -o $${GOPATH%%:*}/bin/mithril-server $(GOBUILD_VERSION_ARGS) $(GO_TAG_ARGS) ./mithril-server
 
 deps: johnny_deps
 	if [ ! -L $${GOPATH%%:*}/src/mithril ] ; then gvm linkthis ; fi
