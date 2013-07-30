@@ -127,7 +127,7 @@ func (me *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		err    error
 	)
 
-	defer func() { // defer to captuer status on the method exit
+	defer func() { // defer to capture status on the method exit
 		log.Println("\"%v %v %v\" %v -\n", r.Method, r.URL, r.Proto, status)
 	}()
 
