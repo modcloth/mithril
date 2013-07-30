@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path"
 )
 
 const faviconBase64 = `
@@ -48,9 +47,6 @@ var (
 	pipelineOrder     = []string{"debug", "pg"}
 
 	pidFlag = flag.String("p", "", "PID file (only written if provided)")
-
-	VersionString string
-	RevString     string
 )
 
 func init() {
@@ -59,6 +55,7 @@ func init() {
 	flag.BoolVar(&revFlag, "rev", false, "Print git revision and exit")
 }
 
+// ServerMain is the entry point used by `mithril-server`
 func ServerMain() {
 	flag.Usage = func() {
 		fmt.Println("Usage: mithril-server [options]")
@@ -67,19 +64,12 @@ func ServerMain() {
 	flag.Parse()
 
 	if versionFlag {
-		progName := path.Base(os.Args[0])
-		if VersionString == "" {
-			VersionString = "<unknown>"
-		}
-		fmt.Printf("%s %s\n", progName, VersionString)
+		fmt.Println(progVersion())
 		os.Exit(0)
 	}
 
 	if revFlag {
-		if RevString == "" {
-			RevString = "<unknown>"
-		}
-		fmt.Println(RevString)
+		fmt.Println(Rev)
 		os.Exit(0)
 	}
 
@@ -97,7 +87,7 @@ func ServerMain() {
 
 	var pipeline Handler
 
-	server := NewServer()
+	server := newServer()
 	pipeline = NewAMQPHandler(*amqpUriFlag, nil)
 
 	for _, name := range pipelineOrder {
@@ -118,19 +108,19 @@ func ServerMain() {
 	log.Fatal(http.ListenAndServe(*addrFlag, nil))
 }
 
-type Server struct {
+type server struct {
 	handlerPipeline Handler
 }
 
-func NewServer() *Server {
-	return &Server{}
+func newServer() *server {
+	return &server{}
 }
 
-func (me *Server) SetHandlerPipeline(handler Handler) {
+func (me *server) SetHandlerPipeline(handler Handler) {
 	me.handlerPipeline = handler
 }
 
-func (me *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (me *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var (
 		status int
 		err    error
@@ -170,18 +160,18 @@ func (me *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	me.respond(status, []byte(""), w)
 }
 
-func (me *Server) respondErr(err error, status int, w http.ResponseWriter) {
+func (me *server) respondErr(err error, status int, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(status)
 	fmt.Fprintf(w, "WOMP WOMP: %v\n", err)
 }
 
-func (me *Server) respond(status int, body []byte, w http.ResponseWriter) {
+func (me *server) respond(status int, body []byte, w http.ResponseWriter) {
 	w.WriteHeader(status)
 	w.Write(body)
 }
 
-func (me *Server) respondFavicon(status int, w http.ResponseWriter) {
+func (me *server) respondFavicon(status int, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "image/vnd.microsoft.icon")
 	w.WriteHeader(status)
 	w.Write(faviconBytes)
