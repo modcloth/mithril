@@ -1,9 +1,9 @@
 package log
 
 import (
-	"flag"
-	"log"
+	stdlog "log"
 	"os"
+	"sync"
 )
 
 type Log interface {
@@ -14,16 +14,28 @@ type Log interface {
 	Fatalf(format string, v ...interface{})
 }
 
-var logger Log
+type indirectLogger struct {
+	Log
+	sync.Mutex
+}
 
-func init() {
-	var debug bool
-	flag.BoolVar(&debug, "d", false, "Enable Debugging handler")
+var (
+	logger Log
+	mu     = new(sync.Mutex)
+)
 
+
+func Initialize(debug bool) {
+	mu.Lock()
+	defer mu.Unlock()
+	logger = NewLogger(debug)
+}
+
+func NewLogger(debug bool) Log {
 	if debug {
-		logger = log.New(os.Stderr, "", log.LstdFlags)
+		return stdlog.New(os.Stderr, "", stdlog.LstdFlags)
 	} else {
-		logger = &nullLogger{}
+		return &nullLogger{}
 	}
 }
 

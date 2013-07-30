@@ -24,6 +24,6 @@ func init() {
 	}
 }
 
-func progVersion() string {
+func ProgVersion() string {
 	return fmt.Sprintf("%s %s", progName, Version)
 }
