@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"mithril/log"
 	"net/http"
-	"os"
 
 	_ "net/http/pprof" // hey, why not
 )
@@ -40,51 +39,19 @@ var (
 	faviconBytes []byte
 
 	addrFlag    = flag.String("a", ":8371", "Mithril server address")
-	versionFlag = false
-	revFlag     = false
 
 	amqpUriFlag       = flag.String("amqp.uri", "amqp://guest:guest@localhost:5672", "AMQP Server URI")
 	pipelineCallbacks = map[string]func(Handler) Handler{}
 	pipelineOrder     = []string{"debug", "pg"}
 
-	pidFlag = flag.String("p", "", "PID file (only written if provided)")
 )
 
 func init() {
 	faviconBytes, _ = base64.StdEncoding.DecodeString(faviconBase64)
-	flag.BoolVar(&versionFlag, "version", false, "Print version and exit")
-	flag.BoolVar(&revFlag, "rev", false, "Print git revision and exit")
 }
 
 // ServerMain is the entry point used by `mithril-server`
 func ServerMain() {
-	flag.Usage = func() {
-		fmt.Println("Usage: mithril-server [options]")
-		flag.PrintDefaults()
-	}
-	flag.Parse()
-
-	if versionFlag {
-		fmt.Println(progVersion())
-		os.Exit(0)
-	}
-
-	if revFlag {
-		fmt.Println(Rev)
-		os.Exit(0)
-	}
-
-	if len(*pidFlag) > 0 {
-		var (
-			f   *os.File
-			err error
-		)
-
-		if f, err = os.Create(*pidFlag); err != nil {
-			log.Fatal(err)
-		}
-		fmt.Fprintf(f, "%d\n", os.Getpid())
-	}
 
 	var pipeline Handler
 
