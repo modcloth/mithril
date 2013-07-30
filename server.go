@@ -136,7 +136,10 @@ func (me *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		status int
 		err    error
 	)
-	log.Println("\"%v %v %v\" %v -\n", r.Method, r.URL, r.Proto, status)
+
+	defer func() { // defer to captuer status on the method exit
+		log.Println("\"%v %v %v\" %v -\n", r.Method, r.URL, r.Proto, status)
+	}()
 
 	if r.Method == "GET" && r.URL.Path == "/favicon.ico" {
 		status = http.StatusOK
