@@ -2,7 +2,6 @@
 language: go
 go:
 - 1.1.1
-- tip
 env:
   global:
   - PATH=$HOME/bin:$PATH
@@ -29,8 +28,6 @@ env:
   matrix:
   - MITHRIL_PG_ENABLED='true' GO_TAG_ARGS='-tags full'
   - MITHRIL_PG_ENABLED='false' GO_TAG_ARGS=''
-  allow_failures:
-  - go: tip
 services:
 - rabbitmq
 before_install:
@@ -49,7 +46,7 @@ before_install:
 install: make build
 script: make golden
 after_success:
-- if tb nopr && [ "$GO_TAG_ARGS" == '-tags full' ] && [ "$TRAVIS_GO_VERSION" == '1.1.1' ] ; then
+- if tb nopr && [ "$GO_TAG_ARGS" == '-tags full' ] ; then
     tb upload-go-artifacts --public ;
   fi
 notifications:
