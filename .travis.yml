@@ -29,6 +29,8 @@ env:
   matrix:
   - MITHRIL_PG_ENABLED='true' GO_TAG_ARGS='-tags full'
   - MITHRIL_PG_ENABLED='false' GO_TAG_ARGS=''
+  allow_failures:
+  - go: tip
 services:
 - rabbitmq
 before_install:
