@@ -47,7 +47,7 @@ before_install:
 install: make build
 script: make golden
 after_success:
-- if tb nopr && [ "$GO_TAG_ARGS" == '-tags full' ] ; then
+- if tb nopr && [ "$GO_TAG_ARGS" == '-tags full' ] && [ "$TRAVIS_GO_VERSION" == '1.1.1' ] ; then
     tb upload-go-artifacts --public ;
   fi
 notifications:
