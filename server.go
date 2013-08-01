@@ -2,9 +2,10 @@ package mithril
 
 import (
 	"encoding/base64"
-	"flag"
 	"fmt"
 	"mithril/log"
+	"mithril/message"
+	"mithril/store"
 	"net/http"
 
 	_ "net/http/pprof" // hey, why not
@@ -35,112 +36,93 @@ dr/zMna/8zJ2v/Mydr/zMna/8zJ2v/////////////////////////////////////////
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
 `
 
-var (
-	faviconBytes []byte
+var faviconBytes []byte
 
-	addrFlag    = flag.String("a", ":8371", "Mithril server address")
-
-	amqpUriFlag       = flag.String("amqp.uri", "amqp://guest:guest@localhost:5672", "AMQP Server URI")
-	pipelineCallbacks = map[string]func(Handler) Handler{}
-	pipelineOrder     = []string{"debug", "pg"}
-
-)
+type Server struct {
+	amqp    *AMQPPublisher
+	storage *store.Storage
+	address string
+}
 
 func init() {
 	faviconBytes, _ = base64.StdEncoding.DecodeString(faviconBase64)
 }
 
-// ServerMain is the entry point used by `mithril-server`
-func ServerMain() {
-
-	var pipeline Handler
-
-	server := newServer()
-	pipeline = NewAMQPHandler(*amqpUriFlag, nil)
-
-	for _, name := range pipelineOrder {
-		if callback, ok := pipelineCallbacks[name]; ok {
-			log.Println("Calling %q pipeline callback\n", name)
-			pipeline = callback(pipeline)
-		}
-	}
-
-	if err := pipeline.Init(); err != nil {
-		log.Fatalf("Failed to initialize handler pipeline: %q", err)
-	}
-
-	server.SetHandlerPipeline(pipeline)
-	http.Handle("/", server)
-
-	log.Println("Serving on", *addrFlag)
-	log.Fatal(http.ListenAndServe(*addrFlag, nil))
-}
-
-type server struct {
-	handlerPipeline Handler
-}
-
-func newServer() *server {
-	return &server{}
-}
-
-func (me *server) SetHandlerPipeline(handler Handler) {
-	me.handlerPipeline = handler
-}
-
-func (me *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func NewServer(configuration *Configuration) (*Server, error) {
 	var (
-		status int
+		storer *store.Storage
+		amqp   *AMQPPublisher
 		err    error
 	)
 
-	defer func() { // defer to capture status on the method exit
-		log.Println("\"%v %v %v\" %v -\n", r.Method, r.URL, r.Proto, status)
-	}()
-
-	if r.Method == "GET" && r.URL.Path == "/favicon.ico" {
-		status = http.StatusOK
-		me.respondFavicon(status, w)
-		return
+	if storer, err = store.Open(configuration.Storage, configuration.StorageUri); err != nil {
+		return nil, err
 	}
 
-	if r.Method != "POST" && r.Method != "PUT" {
-		status = http.StatusMethodNotAllowed
-		err = fmt.Errorf(`Only "POST" and "PUT" are accepted, not %q`, r.Method)
-		me.respondErr(err, status, w)
-		return
+	if amqp, err = NewAMQPPublisher(configuration.AmqpUri); err != nil {
+		return nil, err
 	}
 
-	fReq, err := NewFancyRequest(r)
-	if err != nil {
-		status = http.StatusBadRequest
-		me.respondErr(err, status, w)
-		return
-	}
-
-	if err = me.handlerPipeline.HandleRequest(fReq); err != nil {
-		status = http.StatusInternalServerError
-		me.respondErr(err, status, w)
-		return
-	}
-
-	status = http.StatusNoContent
-	me.respond(status, []byte(""), w)
+	return &Server{
+		storage: storer,
+		amqp:    amqp,
+		address: configuration.ServerAddress,
+	}, nil
 }
 
-func (me *server) respondErr(err error, status int, w http.ResponseWriter) {
+func (me *Server) Serve() {
+	http.Handle("/", me)
+	log.Println("Serving on", me.address)
+	log.Fatal(http.ListenAndServe(me.address, nil))
+}
+
+func (me *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method == "POST" || r.Method == "PUT" {
+		me.processMessage(w, r)
+		return
+	}
+
+	if r.Method == "GET" && r.URL.Path == "/favicon.ico" {
+		me.respondFavicon(w)
+		return
+	}
+
+	me.respondErr(
+		fmt.Errorf(`Only "POST" and "PUT" are accepted, not %q`, r.Method),
+		http.StatusMethodNotAllowed,
+		w)
+}
+
+func (me *Server) processMessage(w http.ResponseWriter, r *http.Request) {
+
+	var (
+		msg *message.Message
+		err error
+	)
+	if msg, err = message.NewMessage(r); err != nil {
+		me.respondErr(err, http.StatusBadRequest, w)
+		return
+	}
+
+	if err := me.storage.Store(msg); err != nil {
+		me.respondErr(err, http.StatusBadRequest, w)
+		return
+	}
+
+	me.amqp.Publish(msg)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(""))
+}
+
+func (me *Server) respondErr(err error, status int, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(status)
 	fmt.Fprintf(w, "WOMP WOMP: %v\n", err)
 }
 
-func (me *server) respond(status int, body []byte, w http.ResponseWriter) {
-	w.WriteHeader(status)
-	w.Write(body)
-}
-
-func (me *server) respondFavicon(status int, w http.ResponseWriter) {
+func (me *Server) respondFavicon(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "image/vnd.microsoft.icon")
-	w.WriteHeader(status)
+	w.WriteHeader(http.StatusOK)
 	w.Write(faviconBytes)
 }

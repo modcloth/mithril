@@ -3,6 +3,7 @@ package mithril
 import (
 	"fmt"
 	"mithril/log"
+	"mithril/message"
 
 	"github.com/streadway/amqp" // explicitly cloned into place
 )
@@ -15,67 +16,40 @@ type amqpAdaptedRequest struct {
 	Immediate  bool
 }
 
-type AMQPHandler struct {
+type AMQPPublisher struct {
 	amqpUri         string
 	amqpConn        *amqp.Connection
 	handlingChannel *amqp.Channel
-	nextHandler     Handler
 	confirmAck      chan uint64
 	confirmNack     chan uint64
 }
 
-func NewAMQPHandler(amqpUri string, next Handler) *AMQPHandler {
-	amqpHandler := &AMQPHandler{
+func NewAMQPPublisher(amqpUri string) (*AMQPPublisher, error) {
+	publisher := &AMQPPublisher{
 		amqpUri: amqpUri,
 	}
 
-	amqpHandler.SetNextHandler(next)
-	return amqpHandler
-}
-
-func (me *AMQPHandler) Init() error {
-	var err error
-
-	if err = me.establishConnection(); err != nil {
-		return err
+	if err := publisher.establishConnection(); err != nil {
+		return nil, err
 	}
-
-	log.Println("AMQP handler initialized")
-
-	if me.nextHandler != nil {
-		return me.nextHandler.Init()
-	}
-
-	return nil
+	return publisher, nil
 }
 
-func (me *AMQPHandler) SetNextHandler(handler Handler) {
-	me.nextHandler = handler
-}
-
-func (me *AMQPHandler) HandleRequest(req *FancyRequest) error {
+func (me *AMQPPublisher) Publish(req *message.Message) error {
 	var (
 		amqpReq *amqpAdaptedRequest
 		err     error
 	)
 
-	if err = me.establishConnection(); err != nil {
-		return err
-	}
-
-	defer me.disconnect()
-
 	amqpReq = me.adaptHttpRequest(req)
-
 	if err = me.publishAdaptedRequest(amqpReq); err != nil {
 		log.Println("Failed to publish request:", err)
 		return err
 	}
-
 	return nil
 }
 
-func (me *AMQPHandler) establishConnection() error {
+func (me *AMQPPublisher) establishConnection() error {
 	conn, err := amqp.Dial(me.amqpUri)
 	if err != nil {
 		return err
@@ -98,7 +72,7 @@ func (me *AMQPHandler) establishConnection() error {
 	return nil
 }
 
-func (me *AMQPHandler) disconnect() {
+func (me *AMQPPublisher) disconnect() {
 	if me.handlingChannel != nil {
 		me.handlingChannel.Close()
 		me.handlingChannel = nil
@@ -110,7 +84,7 @@ func (me *AMQPHandler) disconnect() {
 	}
 }
 
-func (me *AMQPHandler) adaptHttpRequest(req *FancyRequest) *amqpAdaptedRequest {
+func (me *AMQPPublisher) adaptHttpRequest(req *message.Message) *amqpAdaptedRequest {
 	return &amqpAdaptedRequest{
 		Publishing: &amqp.Publishing{
 			MessageId:     req.MessageId,
@@ -127,7 +101,7 @@ func (me *AMQPHandler) adaptHttpRequest(req *FancyRequest) *amqpAdaptedRequest {
 	}
 }
 
-func (me *AMQPHandler) publishAdaptedRequest(amqpReq *amqpAdaptedRequest) error {
+func (me *AMQPPublisher) publishAdaptedRequest(amqpReq *amqpAdaptedRequest) error {
 	log.Println("Publishing adapted HTTP request %+v\n", amqpReq)
 
 	err := me.handlingChannel.Publish(amqpReq.Exchange,

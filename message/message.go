@@ -1,4 +1,4 @@
-package mithril
+package message
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-type FancyRequest struct {
+type Message struct {
 	MessageId     string
 	CorrelationId string
 	Timestamp     time.Time
@@ -23,7 +23,7 @@ type FancyRequest struct {
 	*http.Request
 }
 
-func NewFancyRequest(req *http.Request) (*FancyRequest, error) {
+func NewMessage(req *http.Request) (*Message, error) {
 	var (
 		body      []byte
 		err       error
@@ -51,7 +51,7 @@ func NewFancyRequest(req *http.Request) (*FancyRequest, error) {
 		immediate = true
 	}
 
-	return &FancyRequest{
+	return &Message{
 		req.Header.Get("Message-ID"),     // MessageID
 		req.Header.Get("Correlation-ID"), //CorrelationID
 		// FIXME parse "Date" header?
@@ -65,7 +65,4 @@ func NewFancyRequest(req *http.Request) (*FancyRequest, error) {
 		body,                           // BodyString
 		req,                            // *http.Request
 	}, nil
-}
-
-func (me *FancyRequest) parse() {
 }
