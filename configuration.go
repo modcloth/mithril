@@ -23,7 +23,7 @@ var (
 	revFlag     = flag.Bool("rev", false, "Print git revision and exit")
 	debug       = flag.Bool("d", false, "Enable Debug logging")
 	showStorage = flag.Bool("s", false, "show the list of compiled in storage drivers.")
-	storage     = flag.String("storage", "postgresql", "The storage type to presist messages to.")
+	storage     = flag.String("storage", "", "Where to persist message to.  Messages will not be persisted if unset.")
 	storageUri  = flag.String("storage.uri", "postgres://localhost/mithril_test?sslmode=disable", "The connection uri used by the storage engine.")
 	addrFlag    = flag.String("a", ":8371", "Mithril server address")
 	amqpUriFlag = flag.String("amqp.uri", "amqp://guest:guest@localhost:5672", "AMQP Server URI")

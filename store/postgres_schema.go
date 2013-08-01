@@ -1,6 +1,9 @@
 package store
 
-import "database/sql"
+import (
+	"database/sql"
+	"mithril/log"
+)
 
 type pgSchemaEnsurer struct {
 	db *sql.DB
@@ -51,6 +54,7 @@ func (me *pgSchemaEnsurer) runMigrations() error {
 			continue
 		}
 
+		log.Printf("Executing postgresql migration %s\n", schemaVersion)
 		if err := me.migrateTo(schemaVersion, sqls); err != nil {
 			return err
 		}
@@ -84,7 +88,6 @@ func (me *pgSchemaEnsurer) migrateTo(schemaVersion string, sqls []string) error 
 		}
 	}
 	if _, err = tx.Exec("INSERT INTO schema_migrations VALUES ($1)", schemaVersion); err != nil {
-
 		tx.Rollback()
 		return err
 	}

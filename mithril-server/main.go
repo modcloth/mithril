@@ -36,6 +36,7 @@ func main() {
 	}
 
 	log.Initialize(config.EnableDebug)
+	log.Println("Initializing Mithril...")
 	if server, err := mithril.NewServer(config); err != nil {
 		panic(err)
 	} else {

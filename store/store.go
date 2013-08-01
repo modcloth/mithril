@@ -2,6 +2,7 @@ package store
 
 import (
 	"fmt"
+	"mithril/log"
 	"mithril/message"
 )
 
@@ -35,6 +36,9 @@ func Open(name string, uri string) (*Storage, error) {
 		return nil, fmt.Errorf("Unknown storage driver %q, did you forget to build it?", name)
 	}
 
+	if name != "" {
+		log.Printf("Persisting messages to: %s.\n", name)
+	}
 	if err := driver.Init(uri); err != nil {
 		return nil, err
 	}
