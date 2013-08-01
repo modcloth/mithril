@@ -37,9 +37,11 @@ func NewPGSchemaEnsurer(db *sql.DB) *pgSchemaEnsurer {
 	return &pgSchemaEnsurer{db}
 }
 
-func (me *pgSchemaEnsurer) EnsureSchema() {
-	me.ensureMigrationsTable()
-	me.runMigrations()
+func (me *pgSchemaEnsurer) EnsureSchema() error {
+	if err := me.ensureMigrationsTable(); err != nil {
+		return err
+	}
+	return me.runMigrations()
 }
 
 func (me *pgSchemaEnsurer) ensureMigrationsTable() error {
