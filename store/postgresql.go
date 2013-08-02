@@ -23,8 +23,6 @@ func init() {
 }
 
 func (me *psql) Init(url string) (err error) {
-	me.Lock()
-	defer me.Unlock()
 
 	log.Println("pg - Parsing url")
 	if me.conn, err = pq.ParseURL(url); err != nil {
@@ -53,8 +51,9 @@ func (me *psql) UriFormat() string {
 }
 
 func (me *psql) Store(msg *message.Message) (err error) {
-	me.RLock()
-	me.RUnlock()
+	if err = me.establishConnection(); err != nil {
+		return err
+	}
 	_, err = me.stmt.Exec(
 		msg.MessageId,
 		msg.CorrelationId,
@@ -68,7 +67,9 @@ func (me *psql) Store(msg *message.Message) (err error) {
 		msg.BodyBytes)
 
 	if err != nil {
-		log.Printf("Failed to store message: %+v", err)
+		me.db.Close()
+		me.db = nil
+		log.Printf("pg - Failed to store message: %+v", err)
 	}
 	return err
 }
@@ -87,15 +88,20 @@ func (me *psql) PrepareStatement() (err error) {
 								  body_bytes)
 								  VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`)
 	if err != nil {
-		log.Printf("postgresql - An error occurred while preparing the insert statement: %s\n", err)
+		log.Printf("pg - An error occurred while preparing the insert statement: %s\n", err)
 	}
 	return err
 }
 
 func (me *psql) establishConnection() (err error) {
+
+	if me.db != nil {
+		return nil
+	}
+
 	me.db, err = sql.Open("postgres", me.conn)
 	if err != nil {
-		log.Printf("postgresql - An error occurred while preparing the insert statement: %s\n", err)
+		log.Printf("pg - An error occurred while preparing the insert statement: %s\n", err)
 		return err
 	}
 	return me.PrepareStatement()
