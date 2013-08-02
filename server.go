@@ -105,12 +105,16 @@ func (me *Server) processMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := me.storage.Store(msg); err != nil {
+	if err = me.storage.Store(msg); err != nil {
 		me.respondErr(err, http.StatusBadRequest, w)
 		return
 	}
 
-	me.amqp.Publish(msg)
+	if err = me.amqp.Publish(msg); err != nil {
+		me.respondErr(err, http.StatusBadRequest, w)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(""))
 }

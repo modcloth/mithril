@@ -24,7 +24,6 @@ var (
 	mu     = new(sync.Mutex)
 )
 
-
 func Initialize(debug bool) {
 	mu.Lock()
 	defer mu.Unlock()
@@ -33,24 +32,24 @@ func Initialize(debug bool) {
 
 func NewLogger(debug bool) Log {
 	if debug {
-		return stdlog.New(os.Stderr, "", stdlog.LstdFlags)
+		return stdlog.New(os.Stderr, "[mithril] ", stdlog.LstdFlags)
 	} else {
 		return &nullLogger{}
 	}
 }
 
 func Print(v ...interface{}) {
-	logger.Print(v)
+	logger.Print(v...)
 }
 func Printf(format string, v ...interface{}) {
-	logger.Printf(format, v)
+	logger.Printf(format, v...)
 }
 func Println(v ...interface{}) {
-	logger.Println(v)
+	logger.Println(v...)
 }
 func Fatal(v ...interface{}) {
-	logger.Fatal(v)
+	logger.Fatal(v...)
 }
 func Fatalf(format string, v ...interface{}) {
-	logger.Fatalf(format, v)
+	logger.Fatalf(format, v...)
 }

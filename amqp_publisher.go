@@ -5,7 +5,7 @@ import (
 	"mithril/log"
 	"mithril/message"
 
-	"github.com/streadway/amqp" // explicitly cloned into place
+	"github.com/streadway/amqp"
 )
 
 type amqpAdaptedRequest struct {
@@ -22,6 +22,7 @@ type AMQPPublisher struct {
 	handlingChannel *amqp.Channel
 	confirmAck      chan uint64
 	confirmNack     chan uint64
+	notifyClose     chan *amqp.Error
 }
 
 func NewAMQPPublisher(amqpUri string) (*AMQPPublisher, error) {
@@ -43,32 +44,50 @@ func (me *AMQPPublisher) Publish(req *message.Message) error {
 
 	amqpReq = me.adaptHttpRequest(req)
 	if err = me.publishAdaptedRequest(amqpReq); err != nil {
-		log.Println("Failed to publish request:", err)
+		log.Println("amqp - Failed to publish request:", err)
 		return err
 	}
 	return nil
 }
 
-func (me *AMQPPublisher) establishConnection() error {
-	conn, err := amqp.Dial(me.amqpUri)
+func (me *AMQPPublisher) establishConnection() (err error) {
+
+	if me.amqpConn != nil {
+		return
+	}
+
+	log.Printf("amqp - connecting to rabbitmq...")
+	me.amqpConn, err = amqp.Dial(me.amqpUri)
 	if err != nil {
 		return err
 	}
+	log.Printf("amqp - connected to rabbitmq")
 
-	me.amqpConn = conn
-
-	handlingChannel, err := me.amqpConn.Channel()
+	log.Printf("amqp - creating channel...")
+	me.handlingChannel, err = me.amqpConn.Channel()
 	if err != nil {
 		return err
 	}
+	log.Printf("amqp - channel created")
 
-	if err = handlingChannel.Confirm(false); err != nil {
+	log.Printf("amqp - setting confirm mode...")
+	if err = me.handlingChannel.Confirm(false); err != nil {
 		return err
 	}
+	log.Printf("amqp - confirm mode set")
 
-	me.confirmAck, me.confirmNack = handlingChannel.NotifyConfirm(make(chan uint64, 1), make(chan uint64, 1))
+	me.confirmAck, me.confirmNack = me.handlingChannel.NotifyConfirm(make(chan uint64, 1), make(chan uint64, 1))
+	log.Printf("amqp - notify confirm channels created.")
+	go func() {
+		closeChan := me.amqpConn.NotifyClose(make(chan *amqp.Error))
+		select {
+		case e := <-closeChan:
+			log.Printf("amqp - The connection to rabbitmq has been closed. %d: %s", e.Code, e.Reason)
+			me.disconnect()
+		}
+	}()
 
-	me.handlingChannel = handlingChannel
+	log.Printf("amqp - Ready to publish messages!")
 	return nil
 }
 
@@ -101,8 +120,12 @@ func (me *AMQPPublisher) adaptHttpRequest(req *message.Message) *amqpAdaptedRequ
 	}
 }
 
-func (me *AMQPPublisher) publishAdaptedRequest(amqpReq *amqpAdaptedRequest) error {
-	err := me.handlingChannel.Publish(amqpReq.Exchange,
+func (me *AMQPPublisher) publishAdaptedRequest(amqpReq *amqpAdaptedRequest) (err error) {
+	err = me.establishConnection()
+	if err != nil {
+		return err
+	}
+	err = me.handlingChannel.Publish(amqpReq.Exchange,
 		amqpReq.RoutingKey, amqpReq.Mandatory,
 		amqpReq.Immediate, *amqpReq.Publishing)
 
@@ -114,8 +137,8 @@ func (me *AMQPPublisher) publishAdaptedRequest(amqpReq *amqpAdaptedRequest) erro
 	case _ = <-me.confirmAck:
 		return nil
 	case _ = <-me.confirmNack:
-		return fmt.Errorf("RabbitMQ nack'd message")
+		return fmt.Errorf("amqp - RabbitMQ nack'd message")
 	}
 
-	panic("I shouldn't be here")
+	panic("amqp - I shouldn't be here")
 }
