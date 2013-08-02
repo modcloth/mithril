@@ -3,6 +3,7 @@ package mithril
 import (
 	"flag"
 	"fmt"
+	"os"
 )
 
 type Configuration struct {
@@ -18,35 +19,45 @@ type Configuration struct {
 }
 
 var (
-	pidFlag     = flag.String("p", "", "PID file (only written if provided)")
-	versionFlag = flag.Bool("version", false, "Print version and exit")
-	revFlag     = flag.Bool("rev", false, "Print git revision and exit")
-	debug       = flag.Bool("d", false, "Enable Debug logging")
-	showStorage = flag.Bool("s", false, "show the list of compiled in storage drivers.")
-	storage     = flag.String("storage", "", "Where to persist message to.  Messages will not be persisted if unset.")
-	storageUri  = flag.String("storage.uri", "postgres://localhost/mithril_test?sslmode=disable", "The connection uri used by the storage engine.")
-	addrFlag    = flag.String("a", ":8371", "Mithril server address")
-	amqpUriFlag = flag.String("amqp.uri", "amqp://guest:guest@localhost:5672", "AMQP Server URI")
+	pidFlag     = flag.String("p", "", "-p PID\tCreate a pid file. If the pid file already exits, the application will exit immediately.")
+	debug       = flag.Bool("d", false, "-d\tEnable debug logging.")
+	showStorage = flag.Bool("l", false, "-l\tList the available, compiled storage drivers.")
+	storage     = flag.String("s", "", "-s DRIVER  Which storage driver to use.  Messages will not be persisted if unset.")
+	storageUri  = flag.String("u", "", "-u URL\tThe url used by the storage driver.")
+	revFlag     = flag.Bool("r", false, "-r\tPrint git revision and exit.")
+	versionFlag = flag.Bool("v", false, "-v\tPrint version and exit.")
 )
 
 func NewConfigurationFromFlags() *Configuration {
 
 	flag.Usage = func() {
-		fmt.Println("Usage: mithril-server [options]")
-		flag.PrintDefaults()
+		fmt.Println("Usage: mithril-server [options] <hosting-address> <amqp uri>")
+		printOptions()
 	}
 	flag.Parse()
+
+	if flag.NArg() != 2 {
+		flag.Usage()
+		os.Exit(1)
+	}
 
 	return &Configuration{
 		DisplayVersion: *versionFlag,
 		DisplayRev:     *revFlag,
 		PidFile:        *pidFlag,
 		EnableDebug:    *debug,
-		ServerAddress:  *addrFlag,
 		Storage:        *storage,
 		StorageUri:     *storageUri,
-		AmqpUri:        *amqpUriFlag,
 		ShowStorage:    *showStorage,
+		ServerAddress:  flag.Arg(0),
+		AmqpUri:        flag.Arg(1),
 	}
 
+}
+
+func printOptions() {
+	fmt.Println("Options:")
+	flag.VisitAll(func(flag *flag.Flag) {
+		fmt.Println(flag.Usage)
+	})
 }
