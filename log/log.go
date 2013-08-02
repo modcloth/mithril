@@ -12,6 +12,8 @@ type Log interface {
 	Println(v ...interface{})
 	Fatal(v ...interface{})
 	Fatalf(format string, v ...interface{})
+	Panicf(format string, v ...interface{})
+	Panicln(v ...interface{})
 }
 
 type indirectLogger struct {
@@ -52,4 +54,10 @@ func Fatal(v ...interface{}) {
 }
 func Fatalf(format string, v ...interface{}) {
 	logger.Fatalf(format, v...)
+}
+func Panicf(format string, v ...interface{}) {
+	logger.Panicf(format, v...)
+}
+func Panicln(v ...interface{}) {
+	logger.Panicln(v...)
 }
