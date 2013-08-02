@@ -13,17 +13,18 @@ func main() {
 
 	if config.DisplayVersion {
 		fmt.Println(mithril.ProgVersion())
-		return
 	}
 
 	if config.DisplayRev {
 		fmt.Println(mithril.Rev)
-		return
 	}
 
 	if config.ShowStorage {
 		store.ShowStorage()
-		return
+	}
+
+	if config.ExitImmediate {
+		os.Exit(1)
 	}
 
 	if len(config.PidFile) > 0 {

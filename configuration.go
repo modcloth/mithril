@@ -3,7 +3,6 @@ package mithril
 import (
 	"flag"
 	"fmt"
-	"os"
 )
 
 type Configuration struct {
@@ -16,6 +15,7 @@ type Configuration struct {
 	StorageUri     string
 	AmqpUri        string
 	ShowStorage    bool
+	ExitImmediate  bool
 }
 
 var (
@@ -36,9 +36,12 @@ func NewConfigurationFromFlags() *Configuration {
 	}
 	flag.Parse()
 
-	if flag.NArg() != 2 {
+	// if status flags are set, we need to exit immediate, but dont
+	// show usage.  If not set, then make sure the correct # of args were passed in
+	exitImmediate := *revFlag || *versionFlag || *showStorage
+	if !exitImmediate && flag.NArg() != 2 {
+		exitImmediate = true
 		flag.Usage()
-		os.Exit(1)
 	}
 
 	return &Configuration{
@@ -51,6 +54,7 @@ func NewConfigurationFromFlags() *Configuration {
 		ShowStorage:    *showStorage,
 		ServerAddress:  flag.Arg(0),
 		AmqpUri:        flag.Arg(1),
+		ExitImmediate:  exitImmediate,
 	}
 
 }
