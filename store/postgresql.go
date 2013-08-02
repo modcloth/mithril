@@ -4,10 +4,11 @@ package store
 
 import (
 	"database/sql"
-	"github.com/lib/pq"
 	"mithril/log"
 	"mithril/message"
 	"sync"
+
+	"github.com/lib/pq"
 )
 
 type psql struct {
@@ -31,7 +32,6 @@ func (me *psql) Init(url string) (err error) {
 		return err
 	}
 	log.Println("pg - Parsed url")
-
 
 	log.Println("pg - Establishing connection to postgresql server")
 	if err = me.establishConnection(); err != nil {
