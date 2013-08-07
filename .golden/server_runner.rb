@@ -21,7 +21,7 @@ class ServerRunner
 
     if !File.exist?(server_binary)
       raise "Can't locate `mithril-server` binary! " <<
-      "(it's not here: #{server_binary.inspect})"
+            "(it's not here: #{server_binary.inspect})"
     end
   end
 
