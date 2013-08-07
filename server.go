@@ -115,7 +115,7 @@ func (me *Server) processMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusNoContent)
 	w.Write([]byte(""))
 }
 

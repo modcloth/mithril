@@ -28,7 +28,7 @@ if PG_ENABLED
     port: rand(9450..9499),
     start: Time.now.utc,
     pidfile: File.expand_path('../.artifacts/mithril-server-with-pg.pid', __FILE__),
-    extra_args: "-pg -pg.uri='#{PG_URI}'"
+    extra_args: "-s postgresql -u='#{PG_URI}'"
   )
 end
 
@@ -68,7 +68,7 @@ if PG_ENABLED
 
     it 'tracks migrations with a schema migrations table' do
       out = run_psql(
-        'SELECT * FROM mithril_schema_migrations',
+        'SELECT * FROM schema_migrations',
         user: PSQL_USER, db: PG_DB_NAME
       ).first
       out.split($/).first.strip.wont_be_empty
@@ -104,8 +104,8 @@ if PG_ENABLED
   end
 end
 
-%w(rev version).each do |arg|
-  describe "testing the #{arg} arg" do
+%w(r v).each do |arg|
+  describe "the -#{arg} arg" do
     let(:server) do
       ServerRunner.new(
         port: rand(9450..9499),
@@ -119,7 +119,7 @@ end
       server.start
     end
 
-    it "produces a valid #{arg}" do
+    it "produces a valid result" do
       File.read(server.logfile).wont_match(/<unknown>/)
     end
 
@@ -136,11 +136,11 @@ def main(argv = [].freeze)
     $servers.each do |_,runner|
       runner.stop
     end
-    `rabbitmqadmin delete exchange name=pg_exchange_#{SUITE_LOAD_START}`
+    system("rabbitmqadmin delete exchange name=pg_exchange_#{SUITE_LOAD_START}")
   end
 
   if PG_ENABLED
-    %w(mithril_requests mithril_schema_migrations).each do |table_name|
+    %w(mithril_requests schema_migrations).each do |table_name|
       run_psql(
         "DROP TABLE IF EXISTS #{table_name}",
         user: PSQL_USER, db: PG_DB_NAME
@@ -148,9 +148,9 @@ def main(argv = [].freeze)
     end
   end
 
-  `rabbitmqadmin declare exchange name=pg_exchange_#{SUITE_LOAD_START} type=topic`
-
-  raise "Couldn't declare exchange pg_exchange_#{SUITE_LOAD_START}" if $? != 0
+  unless system("rabbitmqadmin declare exchange name=pg_exchange_#{SUITE_LOAD_START} type=topic")
+    raise "Couldn't declare exchange pg_exchange_#{SUITE_LOAD_START}"
+  end
 
   Dir.chdir(File.expand_path('../', __FILE__)) do
     FileUtils.mkdir_p('./.artifacts')

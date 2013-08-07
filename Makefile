@@ -34,6 +34,7 @@ clean:
 	if [ -d $${GOPATH%%:*}/pkg ] ; then \
 		find $${GOPATH%%:*}/pkg -name '*mithril*' -exec rm -v {} \; ; \
 	fi
+	rm -f .artifacts/*
 
 distclean: clean
 	rm -f ./johnny_deps

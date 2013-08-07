@@ -1,5 +1,5 @@
 class ServerRunner
-  attr_reader :server_binary, :addr, :port, :extra_args, :logfile
+  attr_reader :server_binary, :addr, :port, :amqp_uri, :extra_args, :logfile
   attr_reader :startup_sleep, :start_time, :server_pid, :pidfile
 
   def initialize(options = {})
@@ -13,6 +13,7 @@ class ServerRunner
       __FILE__
     )
     @pidfile = (options[:pidfile] || "mithril-server-#{@port}.pid")
+    @amqp_uri = options[:amqp_uri] || 'amqp://guest:guest@localhost:5672'
     @extra_args = options[:extra_args] || ''
     @startup_sleep = Float(
       options[:startup_sleep] || ENV['MITHRIL_STARTUP_SLEEP'] || 0.5
@@ -20,15 +21,16 @@ class ServerRunner
 
     if !File.exist?(server_binary)
       raise "Can't locate `mithril-server` binary! " <<
-            "(it's not here: #{server_binary.inspect})"
+      "(it's not here: #{server_binary.inspect})"
     end
   end
 
   def start
-    announce! "Starting mithril server with address #{addr}"
+    announce! "Starting mithril server with address #{addr.inspect}, " <<
+    "amqp uri #{amqp_uri.inspect}"
     @server_pid = Process.spawn(
-      "#{server_binary} -a #{addr} -p #{pidfile} #{extra_args}" <<
-        ">> #{logfile} 2>&1"
+      "#{server_binary} -p #{pidfile} #{extra_args} -d #{addr} #{amqp_uri} " <<
+      ">> #{logfile} 2>&1"
     )
     sleep @startup_sleep
     @server_pid
