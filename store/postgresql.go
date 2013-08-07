@@ -38,10 +38,15 @@ func (me *psql) Init(url string) (err error) {
 	log.Println("pg - Connection established")
 
 	log.Println("pg - Verifying database schema and performing migrations if necessary")
-	if err = NewPGSchemaEnsurer(me.db).EnsureSchema(); err != nil {
+	if err = newPGSchemaEnsurer(me.db).EnsureSchema(); err != nil {
 		return err
 	}
-	log.Println("pg - Schema varification complete")
+	log.Println("pg - Schema verification complete")
+
+	log.Println("pg - Preparing mithril request statement")
+	if err = me.PrepareStatement(); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -94,7 +99,6 @@ func (me *psql) PrepareStatement() (err error) {
 }
 
 func (me *psql) establishConnection() (err error) {
-
 	if me.db != nil {
 		return nil
 	}
@@ -104,5 +108,6 @@ func (me *psql) establishConnection() (err error) {
 		log.Printf("pg - An error occurred while preparing the insert statement: %s\n", err)
 		return err
 	}
-	return me.PrepareStatement()
+
+	return nil
 }

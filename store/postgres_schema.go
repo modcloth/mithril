@@ -33,7 +33,7 @@ var migrations = map[string][]string{
 	},
 }
 
-func NewPGSchemaEnsurer(db *sql.DB) *pgSchemaEnsurer {
+func newPGSchemaEnsurer(db *sql.DB) *pgSchemaEnsurer {
 	return &pgSchemaEnsurer{db}
 }
 
@@ -45,8 +45,7 @@ func (me *pgSchemaEnsurer) EnsureSchema() error {
 }
 
 func (me *pgSchemaEnsurer) ensureMigrationsTable() error {
-	_, err := me.db.Exec(`CREATE TABLE IF NOT EXISTS schema_migrations (
-								version character varying(255) NOT NULL);`)
+	_, err := me.db.Exec(`CREATE TABLE IF NOT EXISTS schema_migrations (version character varying(255) NOT NULL);`)
 	return err
 }
 
@@ -56,7 +55,7 @@ func (me *pgSchemaEnsurer) runMigrations() error {
 			continue
 		}
 
-		log.Printf("Executing postgresql migration %s\n", schemaVersion)
+		log.Printf("pg - Executing postgresql migration %s\n", schemaVersion)
 		if err := me.migrateTo(schemaVersion, sqls); err != nil {
 			return err
 		}
