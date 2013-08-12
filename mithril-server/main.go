@@ -1,49 +1,46 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"mithril"
 	"mithril/log"
+	"mithril/store"
 	"os"
 )
 
-var (
-	pidFlag     = flag.String("p", "", "PID file (only written if provided)")
-	versionFlag = flag.Bool("version", false, "Print version and exit")
-	revFlag     = flag.Bool("rev", false, "Print git revision and exit")
-	debug       = flag.Bool("d", false, "Enable Debugging handler")
-	pidFile     *os.File
-)
-
 func main() {
-	var err error
+	config := mithril.NewConfigurationFromFlags()
 
-	flag.Usage = func() {
-		fmt.Println("Usage: mithril-server [options]")
-		flag.PrintDefaults()
-	}
-	flag.Parse()
-
-	if *versionFlag {
+	if config.DisplayVersion {
 		fmt.Println(mithril.ProgVersion())
-		return
 	}
 
-	if *revFlag {
+	if config.DisplayRev {
 		fmt.Println(mithril.Rev)
-		return
 	}
 
-	if len(*pidFlag) > 0 {
+	if config.ShowStorage {
+		store.ShowStorage()
+	}
 
-		if pidFile, err = os.Create(*pidFlag); err != nil {
+	if config.ExitImmediate {
+		os.Exit(1)
+	}
+
+	if len(config.PidFile) > 0 {
+		if pidFile, err := os.Create(config.PidFile); err != nil {
 			log.Fatal(err)
+		} else {
+			defer func() { os.Remove(config.PidFile) }()
+			fmt.Fprintf(pidFile, "%d\n", os.Getpid())
 		}
-		defer func() { os.Remove(*pidFlag) }()
-		fmt.Fprintf(pidFile, "%d\n", os.Getpid())
 	}
 
-	log.Initialize(*debug)
-	mithril.ServerMain()
+	log.Initialize(config.EnableDebug)
+	log.Println("Initializing Mithril...")
+	if server, err := mithril.NewServer(config); err != nil {
+		log.Fatal(err)
+	} else {
+		server.Serve()
+	}
 }
