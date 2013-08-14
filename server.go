@@ -105,6 +105,7 @@ func (me *Server) processMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Println("Processing message: ", msg.MessageId)
 	if err = me.storage.Store(msg); err != nil {
 		me.respondErr(err, http.StatusBadRequest, w)
 		return
