@@ -23,7 +23,6 @@ func init() {
 }
 
 func (me *psql) Init(url string) (err error) {
-
 	log.Println("pg - Parsing url")
 	if me.conn, err = pq.ParseURL(url); err != nil {
 		log.Printf("The postgresql url specified could not be parsed.\nurl: %s\nerr: %s\n", url, err)
@@ -31,11 +30,9 @@ func (me *psql) Init(url string) (err error) {
 	}
 	log.Println("pg - Parsed url")
 
-	log.Println("pg - Establishing connection to postgresql server")
 	if err = me.establishConnection(); err != nil {
 		return err
 	}
-	log.Println("pg - Connection established")
 
 	log.Println("pg - Verifying database schema and performing migrations if necessary")
 	if err = newPGSchemaEnsurer(me.db).EnsureSchema(); err != nil {
@@ -43,7 +40,6 @@ func (me *psql) Init(url string) (err error) {
 	}
 	log.Println("pg - Schema verification complete")
 
-	log.Println("pg - Preparing mithril request statement")
 	if err = me.PrepareStatement(); err != nil {
 		return err
 	}
@@ -56,8 +52,10 @@ func (me *psql) UriFormat() string {
 }
 
 func (me *psql) Store(msg *message.Message) (err error) {
-	if err = me.establishConnection(); err != nil {
-		return err
+	if me.db == nil {
+		if err = me.restablishConnection(); err != nil {
+			return err
+		}
 	}
 	_, err = me.stmt.Exec(
 		msg.MessageId,
@@ -80,6 +78,7 @@ func (me *psql) Store(msg *message.Message) (err error) {
 }
 
 func (me *psql) PrepareStatement() (err error) {
+	log.Println("pg - Preparing mithril request statement")
 	me.stmt, err = me.db.Prepare(`INSERT INTO mithril_requests (
 								  message_id,
 								  correlation_id,
@@ -99,15 +98,26 @@ func (me *psql) PrepareStatement() (err error) {
 }
 
 func (me *psql) establishConnection() (err error) {
-	if me.db != nil {
-		return nil
-	}
-
+	log.Println("pg - Establishing connection to postgresql server")
 	me.db, err = sql.Open("postgres", me.conn)
 	if err != nil {
 		log.Printf("pg - An error occurred while preparing the insert statement: %s\n", err)
 		return err
 	}
 
+	log.Println("pg - Connection established")
+	return nil
+}
+
+func (me *psql) restablishConnection() (err error) {
+	log.Println("pg - Detected reconnection to postgresql server is needed")
+	if err = me.establishConnection(); err != nil {
+		return err
+	}
+
+	if err = me.PrepareStatement(); err != nil {
+		return err
+	}
+	log.Println("pg - Reconnection successful")
 	return nil
 }
