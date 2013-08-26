@@ -7,6 +7,7 @@
 _obj/
 _test/
 .artifacts/
+/tmp/
 
 # Architecture specific extensions/prefixes
 *.[568vq]
