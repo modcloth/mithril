@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+main() {
+  case "$1" in
+    -h|--help)
+      usage
+      exit 0
+  esac
+
+  if [ "$#" -lt 2 ] ; then
+    echo 'Not enough arguments' >&2
+    usage
+    exit 1
+  fi
+
+  SOURCE="$1"
+  TARGET="$2"
+  HTTP_PORT="${3:-"80"}"
+  HTTPS_PORT="${4:-"443"}"
+
+  SCRIPT="$(dirname $0)/_perf-test-script.bash"
+
+  set -e
+  ssh root@$SOURCE "echo '$(cat $SCRIPT)' > /tmp/perf-test
+echo \"main '$TARGET' '$HTTP_PORT' '$HTTPS_PORT'\" >> /tmp/perf-test
+chmod +x /tmp/perf-test
+/tmp/perf-test
+sed -i s/echo.*$// /root/.bash_profile
+sed -i s/echo.*$// /root/.bashrc
+sed -i s/echo.*$// /root/.profile
+"
+
+  top="$(dirname $(dirname $0))"
+
+  scp -q root@$SOURCE:/tmp/performance_results.tar.gz "$top"
+  tar xzf "$top/performance_results.tar.gz"
+  rm -f "$top/performance_results.tar.gz"
+}
+
+usage() {
+  cat <<EOF >&2
+  Usage: $0 <source_server> <target_server> [http_port] [https_port]
+EOF
+}
+
+main "$@"
