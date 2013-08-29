@@ -56,3 +56,4 @@ Your Ruby interpreter is too old :smile_cat:.  The test suite uses
 `minitest` from the Ruby standard library as of version 1.9.  If you
 install either `rvm` or `rbenv`, they should detect the presence of the
 `.ruby-version` file and instruct you accordingly (or explosively).
+
