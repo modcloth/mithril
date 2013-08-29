@@ -7,6 +7,7 @@ import (
 	"mithril/message"
 	"mithril/store"
 	"net/http"
+	"time"
 
 	_ "net/http/pprof" // hey, why not
 )
@@ -77,25 +78,26 @@ func (me *Server) Serve() {
 }
 
 func (me *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	startTime := time.Now()
+
+	log.Printf("%s %s", r.Method, r.URL.Path)
 
 	if r.Method == "POST" || r.Method == "PUT" {
 		me.processMessage(w, r)
-		return
-	}
-
-	if r.Method == "GET" && r.URL.Path == "/favicon.ico" {
+	} else if r.Method == "GET" && r.URL.Path == "/favicon.ico" {
 		me.respondFavicon(w)
-		return
+	} else {
+		me.respondErr(
+			fmt.Errorf(`Only "POST" and "PUT" are accepted, not %q`, r.Method),
+			http.StatusMethodNotAllowed,
+			w)
 	}
 
-	me.respondErr(
-		fmt.Errorf(`Only "POST" and "PUT" are accepted, not %q`, r.Method),
-		http.StatusMethodNotAllowed,
-		w)
+	log.Printf("Request handled in %s.\n", time.Now().Sub(startTime))
+	return
 }
 
 func (me *Server) processMessage(w http.ResponseWriter, r *http.Request) {
-
 	var (
 		msg *message.Message
 		err error

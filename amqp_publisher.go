@@ -1,9 +1,10 @@
 package mithril
 
 import (
-	"fmt"
 	"mithril/log"
 	"mithril/message"
+	"sync"
+	"time"
 
 	"github.com/streadway/amqp"
 )
@@ -23,6 +24,7 @@ type AMQPPublisher struct {
 	confirmAck      chan uint64
 	confirmNack     chan uint64
 	notifyClose     chan *amqp.Error
+	sync.Mutex
 }
 
 func NewAMQPPublisher(amqpUri string) (*AMQPPublisher, error) {
@@ -51,17 +53,19 @@ func (me *AMQPPublisher) Publish(req *message.Message) error {
 }
 
 func (me *AMQPPublisher) establishConnection() (err error) {
+	me.Lock()
+	defer me.Unlock()
 
 	if me.amqpConn != nil {
 		return
 	}
 
-	log.Printf("amqp - connecting to rabbitmq...")
+	log.Printf("amqp - no RabbitMQ connection found, establishing new connection...")
 	me.amqpConn, err = amqp.Dial(me.amqpUri)
 	if err != nil {
 		return err
 	}
-	log.Printf("amqp - connected to rabbitmq")
+	log.Printf("amqp - connected to RabbitMQ")
 
 	log.Printf("amqp - creating channel...")
 	me.handlingChannel, err = me.amqpConn.Channel()
@@ -78,11 +82,13 @@ func (me *AMQPPublisher) establishConnection() (err error) {
 
 	me.confirmAck, me.confirmNack = me.handlingChannel.NotifyConfirm(make(chan uint64, 1), make(chan uint64, 1))
 	log.Printf("amqp - notify confirm channels created.")
+
 	go func() {
-		closeChan := me.amqpConn.NotifyClose(make(chan *amqp.Error))
+		closeChan := me.handlingChannel.NotifyClose(make(chan *amqp.Error))
+
 		select {
 		case e := <-closeChan:
-			log.Printf("amqp - The connection to rabbitmq has been closed. %d: %s", e.Code, e.Reason)
+			log.Printf("amqp - The channel opened with RabbitMQ has been closed. %d: %s", e.Code, e.Reason)
 			me.disconnect()
 		}
 	}()
@@ -92,6 +98,9 @@ func (me *AMQPPublisher) establishConnection() (err error) {
 }
 
 func (me *AMQPPublisher) disconnect() {
+	me.Lock()
+	defer me.Unlock()
+
 	if me.handlingChannel != nil {
 		me.handlingChannel.Close()
 		me.handlingChannel = nil
@@ -125,9 +134,12 @@ func (me *AMQPPublisher) publishAdaptedRequest(amqpReq *amqpAdaptedRequest) (err
 	if err != nil {
 		return err
 	}
+
+	me.Lock()
 	err = me.handlingChannel.Publish(amqpReq.Exchange,
 		amqpReq.RoutingKey, amqpReq.Mandatory,
 		amqpReq.Immediate, *amqpReq.Publishing)
+	me.Unlock()
 
 	if err != nil {
 		return err
@@ -137,6 +149,7 @@ func (me *AMQPPublisher) publishAdaptedRequest(amqpReq *amqpAdaptedRequest) (err
 	case _ = <-me.confirmAck:
 		return nil
 	case _ = <-me.confirmNack:
-		return fmt.Errorf("amqp - RabbitMQ nack'd message")
+		log.Printf("amqp - RabbitMQ nack'd a message at %s", time.Now().UTC())
+		return nil
 	}
 }
