@@ -56,7 +56,7 @@ func (me *AMQPPublisher) establishConnection() (err error) {
 		return
 	}
 
-	log.Printf("amqp - connecting to rabbitmq...")
+	log.Printf("amqp - no rabbitmq connection found, establishing new connection...")
 	me.amqpConn, err = amqp.Dial(me.amqpUri)
 	if err != nil {
 		return err
