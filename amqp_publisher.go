@@ -56,12 +56,12 @@ func (me *AMQPPublisher) establishConnection() (err error) {
 		return
 	}
 
-	log.Printf("amqp - no rabbitmq connection found, establishing new connection...")
+	log.Printf("amqp - no RabbitMQ connection found, establishing new connection...")
 	me.amqpConn, err = amqp.Dial(me.amqpUri)
 	if err != nil {
 		return err
 	}
-	log.Printf("amqp - connected to rabbitmq")
+	log.Printf("amqp - connected to RabbitMQ")
 
 	log.Printf("amqp - creating channel...")
 	me.handlingChannel, err = me.amqpConn.Channel()
@@ -84,7 +84,7 @@ func (me *AMQPPublisher) establishConnection() (err error) {
 
 		select {
 		case e := <-closeChan:
-			log.Printf("amqp - The channel opened with rabbitmq has been closed. %d: %s", e.Code, e.Reason)
+			log.Printf("amqp - The channel opened with RabbitMQ has been closed. %d: %s", e.Code, e.Reason)
 			me.disconnect()
 		}
 	}()
