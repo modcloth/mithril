@@ -1,10 +1,10 @@
 package mithril
 
 import (
-	"fmt"
 	"mithril/log"
 	"mithril/message"
 	"sync"
+	"time"
 
 	"github.com/streadway/amqp"
 )
@@ -149,6 +149,7 @@ func (me *AMQPPublisher) publishAdaptedRequest(amqpReq *amqpAdaptedRequest) (err
 	case _ = <-me.confirmAck:
 		return nil
 	case _ = <-me.confirmNack:
-		return fmt.Errorf("amqp - RabbitMQ nack'd message")
+		log.Printf("amqp - RabbitMQ nack'd a message at %s", time.Now().UTC())
+		return nil
 	}
 }
