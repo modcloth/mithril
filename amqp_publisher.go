@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"mithril/log"
 	"mithril/message"
+	"sync"
 
 	"github.com/streadway/amqp"
 )
@@ -23,6 +24,7 @@ type AMQPPublisher struct {
 	confirmAck      chan uint64
 	confirmNack     chan uint64
 	notifyClose     chan *amqp.Error
+	sync.Mutex
 }
 
 func NewAMQPPublisher(amqpUri string) (*AMQPPublisher, error) {
@@ -51,6 +53,8 @@ func (me *AMQPPublisher) Publish(req *message.Message) error {
 }
 
 func (me *AMQPPublisher) establishConnection() (err error) {
+	me.Lock()
+	defer me.Unlock()
 
 	if me.amqpConn != nil {
 		return
@@ -94,6 +98,9 @@ func (me *AMQPPublisher) establishConnection() (err error) {
 }
 
 func (me *AMQPPublisher) disconnect() {
+	me.Lock()
+	defer me.Unlock()
+
 	if me.handlingChannel != nil {
 		me.handlingChannel.Close()
 		me.handlingChannel = nil
@@ -127,9 +134,12 @@ func (me *AMQPPublisher) publishAdaptedRequest(amqpReq *amqpAdaptedRequest) (err
 	if err != nil {
 		return err
 	}
+
+	me.Lock()
 	err = me.handlingChannel.Publish(amqpReq.Exchange,
 		amqpReq.RoutingKey, amqpReq.Mandatory,
 		amqpReq.Immediate, *amqpReq.Publishing)
+	me.Unlock()
 
 	if err != nil {
 		return err
