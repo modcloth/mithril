@@ -78,11 +78,13 @@ func (me *AMQPPublisher) establishConnection() (err error) {
 
 	me.confirmAck, me.confirmNack = me.handlingChannel.NotifyConfirm(make(chan uint64, 1), make(chan uint64, 1))
 	log.Printf("amqp - notify confirm channels created.")
+
 	go func() {
-		closeChan := me.amqpConn.NotifyClose(make(chan *amqp.Error))
+		closeChan := me.handlingChannel.NotifyClose(make(chan *amqp.Error))
+
 		select {
 		case e := <-closeChan:
-			log.Printf("amqp - The connection to rabbitmq has been closed. %d: %s", e.Code, e.Reason)
+			log.Printf("amqp - The channel opened with rabbitmq has been closed. %d: %s", e.Code, e.Reason)
 			me.disconnect()
 		}
 	}()
