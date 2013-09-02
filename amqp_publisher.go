@@ -121,6 +121,7 @@ func (me *AMQPPublisher) adaptHttpRequest(req *message.Message) *amqpAdaptedRequ
 			AppId:         req.AppId,
 			ContentType:   req.ContentType,
 			Body:          req.BodyBytes,
+			DeliveryMode:  amqp.Persistent,
 		},
 		Exchange:   req.Exchange,
 		RoutingKey: req.RoutingKey,
