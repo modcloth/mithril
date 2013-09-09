@@ -79,8 +79,9 @@ func (me *Server) Serve() {
 
 func (me *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
+	//r.Close = true
 
-	log.Printf("%s %s", r.Method, r.URL.Path)
+	log.Printf("%s %s Headers: %+v", r.Method, r.URL.Path, r.Header)
 
 	if r.Method == "POST" || r.Method == "PUT" {
 		me.processMessage(w, r)
