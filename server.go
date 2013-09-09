@@ -79,7 +79,7 @@ func (me *Server) Serve() {
 
 func (me *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
-	//r.Close = true
+	r.Close = true
 
 	log.Printf("%s %s Headers: %+v", r.Method, r.URL.Path, r.Header)
 
