@@ -9,16 +9,17 @@ import (
 )
 
 type Message struct {
-	MessageId     string
-	CorrelationId string
-	Timestamp     time.Time
-	AppId         string
-	ContentType   string
-	Exchange      string
-	RoutingKey    string
-	Mandatory     bool
-	Immediate     bool
-	BodyBytes     []byte
+	MessageId       string
+	CorrelationId   string
+	Timestamp       time.Time
+	AppId           string
+	ContentType     string
+	ContentEncoding string
+	Exchange        string
+	RoutingKey      string
+	Mandatory       bool
+	Immediate       bool
+	BodyBytes       []byte
 
 	*http.Request
 }
@@ -55,14 +56,15 @@ func NewMessage(req *http.Request) (*Message, error) {
 		req.Header.Get("Message-ID"),     // MessageID
 		req.Header.Get("Correlation-ID"), //CorrelationID
 		// FIXME parse "Date" header?
-		time.Now().UTC(),               // Timestamp
-		req.Header.Get("From"),         // AppId
-		req.Header.Get("Content-Type"), // ContentType
-		pathParts[0],                   // Exchange
-		pathParts[1],                   // RoutingKey
-		mandatory,                      // Mandatory
-		immediate,                      // Immediate
-		body,                           // BodyString
-		req,                            // *http.Request
+		time.Now().UTC(),                   // Timestamp
+		req.Header.Get("From"),             // AppId
+		req.Header.Get("Content-Type"),     // ContentType
+		req.Header.Get("Content-Encoding"), //ContentEncoding
+		pathParts[0],                       // Exchange
+		pathParts[1],                       // RoutingKey
+		mandatory,                          // Mandatory
+		immediate,                          // Immediate
+		body,                               // BodyString
+		req,                                // *http.Request
 	}, nil
 }

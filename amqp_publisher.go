@@ -115,13 +115,14 @@ func (me *AMQPPublisher) disconnect() {
 func (me *AMQPPublisher) adaptHttpRequest(req *message.Message) *amqpAdaptedRequest {
 	return &amqpAdaptedRequest{
 		Publishing: &amqp.Publishing{
-			MessageId:     req.MessageId,
-			CorrelationId: req.CorrelationId,
-			Timestamp:     req.Timestamp,
-			AppId:         req.AppId,
-			ContentType:   req.ContentType,
-			Body:          req.BodyBytes,
-			DeliveryMode:  amqp.Persistent,
+			MessageId:       req.MessageId,
+			CorrelationId:   req.CorrelationId,
+			Timestamp:       req.Timestamp,
+			AppId:           req.AppId,
+			ContentType:     req.ContentType,
+			ContentEncoding: req.ContentEncoding,
+			Body:            req.BodyBytes,
+			DeliveryMode:    amqp.Persistent,
 		},
 		Exchange:   req.Exchange,
 		RoutingKey: req.RoutingKey,
