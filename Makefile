@@ -1,6 +1,6 @@
-LIBS := mithril
-REV_VAR := mithril.Rev
-VERSION_VAR := mithril.Version
+LIBS := github.com/modcloth-labs/mithril
+REV_VAR := github.com/modcloth-labs/mithril.Rev
+VERSION_VAR := github.com/modcloth-labs/mithril.Version
 REPO_VERSION := $(shell git describe --always --dirty --tags)
 REPO_REV := $(shell git rev-parse --sq HEAD)
 GOBUILD_VERSION_ARGS := -ldflags "-X $(REV_VAR) $(REPO_REV) -X $(VERSION_VAR) $(REPO_VERSION)"
@@ -21,7 +21,6 @@ build: deps
 	go build -o $${GOPATH%%:*}/bin/mithril-server $(GOBUILD_VERSION_ARGS) $(GO_TAG_ARGS) ./mithril-server
 
 deps: johnny_deps
-	if [ ! -L $${GOPATH%%:*}/src/mithril ] ; then gvm linkthis ; fi
 	./johnny_deps
 
 johnny_deps:

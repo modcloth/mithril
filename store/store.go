@@ -2,8 +2,9 @@ package store
 
 import (
 	"fmt"
-	"mithril/log"
-	"mithril/message"
+
+	"github.com/modcloth-labs/mithril/log"
+	"github.com/modcloth-labs/mithril/message"
 )
 
 type Storage struct {

@@ -4,11 +4,11 @@ package store
 
 import (
 	"database/sql"
-	"mithril/log"
-	"mithril/message"
 	"sync"
 
 	"github.com/lib/pq"
+	"github.com/modcloth-labs/mithril/log"
+	"github.com/modcloth-labs/mithril/message"
 )
 
 type psql struct {

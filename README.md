@@ -22,18 +22,6 @@ please file an issue.
 
 ### Troubleshooting
 
-#### `command not found: gvm`
-If the build fails because `gvm` cannot be found, you can silence
-the error by creating the following symlink (although use of
-[gvm](https://github.com/moovweb/gvm) is encouraged, as this is what is
-used on Travis CI):
-
-``` bash
-pwd
-# => /Users/jdoe/workspace/mithril
-ln -s $PWD ${GOPATH%%:*}/src/mithril
-```
-
 #### `command not found: psql`, or other failures related to PostgreSQL
 
 In order to test the PostgreSQL integration, you will also have to have

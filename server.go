@@ -3,13 +3,14 @@ package mithril
 import (
 	"encoding/base64"
 	"fmt"
-	"mithril/log"
-	"mithril/message"
-	"mithril/store"
 	"net/http"
 	"time"
 
 	_ "net/http/pprof" // hey, why not
+
+	"github.com/modcloth-labs/mithril/log"
+	"github.com/modcloth-labs/mithril/message"
+	"github.com/modcloth-labs/mithril/store"
 )
 
 const faviconBase64 = `

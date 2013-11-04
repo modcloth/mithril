@@ -1,11 +1,11 @@
 package mithril
 
 import (
-	"mithril/log"
-	"mithril/message"
 	"sync"
 	"time"
 
+	"github.com/modcloth-labs/mithril/log"
+	"github.com/modcloth-labs/mithril/message"
 	"github.com/streadway/amqp"
 )
 
