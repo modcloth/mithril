@@ -1,8 +1,8 @@
 package store
 
 import (
-	"mithril/log"
-	"mithril/message"
+	"github.com/modcloth-labs/mithril/log"
+	"github.com/modcloth-labs/mithril/message"
 )
 
 type nilstore struct {
