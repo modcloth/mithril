@@ -5,23 +5,9 @@ go:
 env:
   global:
   - PATH=$HOME/bin:$HOME/gopath/bin:$PATH
-  - ARTIFACTS_AWS_REGION=us-east-1
-  - ARTIFACTS_S3_BUCKET=modcloth-public-travis-artifacts
   - MITHRIL_PG_URI='postgres://postgres@localhost?sslmode=disable'
   - MITHRIL_PG_DB_NAME='postgres'
   - MITHRIL_PG_USER='postgres'
-  - secure: |-
-      FJHd6ppu+tmqK22fOWa+muolpMkkQt+ycz3ytnw7Nar8bn8UMOGGE5NvRF4r
-      Zg+qt5w44zwijAV0RKehSVu1gJaY3VuKq2JgHpmveuWgxPD92fnP2FZcc5Dv
-      WV7HtxvJdb9BU1dfJsMy4Tf3SF12B/lpaC0t103GpAoPSUIXw70=
-  - secure: |-
-      ntSya4NnAwV+cRdfkLphr2VQALklQHgGZC2LV6VHPjsChEMI5Sh32yEB/Pv/
-      7qKZ3bWfsAN8u5s7mpySP1xRtl+NX+ATjQkhmb1z/gSL57J3XhgCQwEqZNWW
-      aSbgocDcVA2CjNhiMI2ze1FSr7rXptAyGu7sLJUXXU8ftALFhRs=
-  - secure: |-
-      aeTbhomNFMK7gc8byHFcZDbsfDYpTUoSu1qxhraCVxzxcG9txoCPwMEgmVeh
-      36env+3ioGxFUwfMtT3qrezQ13jeHlgRyXxnnsPUTC/wMMhVlvPYXsakUTOY
-      DK9Crr8ZZvzHQ+6QLtU47xLqL8GKM/x1mzDAVy7QzqN2c57l168=
   matrix:
   - MITHRIL_PG_ENABLED='true' GO_TAG_ARGS=''
   - MITHRIL_PG_ENABLED='false' GO_TAG_ARGS='-tags nil'
@@ -40,6 +26,7 @@ script: make golden
 addons:
   artifacts:
     debug: '1'
+    bucket: modcloth-public-travis-artifacts
     key:
       secure: jyc2YmclTdtcdi0vrzNDP/90UeZ6PwePVyorH8Hob3FvbJaNULThCG/jOsEfzEeTR6V0Utcz77xpHc79NcMadymva+0CeIhg0jz4aC+EoyC3LtU7hGZCdMJVAdnGCUvWdFZSmBh9VQlK6sH2m8q0U44R67QwXXdZWkNXVDFGMtk=
     secret:
