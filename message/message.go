@@ -25,6 +25,8 @@ type Message struct {
 }
 
 func NewMessage(req *http.Request) (*Message, error) {
+	defer req.Body.Close()
+
 	var (
 		body      []byte
 		err       error
