@@ -1,10 +1,10 @@
 ---
 language: go
 go:
-- 1.1.1
+- '1.3'
 env:
   global:
-  - PATH=$HOME/bin:$PATH
+  - PATH=$HOME/bin:$HOME/gopath/bin:$PATH
   - ARTIFACTS_AWS_REGION=us-east-1
   - ARTIFACTS_S3_BUCKET=modcloth-public-travis-artifacts
   - MITHRIL_PG_URI='postgres://postgres@localhost?sslmode=disable'
@@ -26,8 +26,8 @@ env:
 
       DK9Crr8ZZvzHQ+6QLtU47xLqL8GKM/x1mzDAVy7QzqN2c57l168='
   matrix:
-  - MITHRIL_PG_ENABLED='true' GO_TAG_ARGS='-tags full'
-  - MITHRIL_PG_ENABLED='false' GO_TAG_ARGS=''
+  - MITHRIL_PG_ENABLED='true' GO_TAG_ARGS=''
+  - MITHRIL_PG_ENABLED='false' GO_TAG_ARGS='-tags nil'
 services:
 - rabbitmq
 before_install:
@@ -36,19 +36,13 @@ before_install:
 - sudo rabbitmq-plugins enable rabbitmq_management
 - curl http://guest:guest@localhost:15672/cli/rabbitmqadmin > $HOME/bin/rabbitmqadmin
 - chmod +x $HOME/bin/rabbitmqadmin
-- curl -s -O https://raw.github.com/modcloth-labs/travis-buddy/master/tb
-- chmod +x tb
 - popd
-- tb setup-aws
-- if tb nopr ; then
-    tb install-travis-artifacts ;
-  fi
+- go get -x github.com/meatballhat/deppy
 install: make build
 script: make golden
-after_success:
-- if tb nopr && [ "$GO_TAG_ARGS" == '-tags full' ] ; then
-    tb upload-go-artifacts --public ;
-  fi
+addons:
+  artifacts:
+    debug: '1'
 notifications:
   email:
     recipients:

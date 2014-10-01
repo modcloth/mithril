@@ -21,4 +21,3 @@ _cgo_export.*
 _testmain.go
 
 *.exe
-/johnny_deps

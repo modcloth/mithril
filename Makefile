@@ -1,46 +1,60 @@
-LIBS := github.com/modcloth-labs/mithril
+PACKAGE := github.com/modcloth-labs/mithril
+SUBPACKAGES := \
+	$(PACKAGE)/log \
+	$(PACKAGE)/message \
+	$(PACKAGE)/mithril-server \
+	$(PACKAGE)/store
 REV_VAR := github.com/modcloth-labs/mithril.Rev
 VERSION_VAR := github.com/modcloth-labs/mithril.Version
 REPO_VERSION := $(shell git describe --always --dirty --tags)
 REPO_REV := $(shell git rev-parse --sq HEAD)
-GOBUILD_VERSION_ARGS := -ldflags "-X $(REV_VAR) $(REPO_REV) -X $(VERSION_VAR) $(REPO_VERSION)"
-JOHNNY_DEPS_VERSION := v0.1.3
+GOBUILD_VERSION_ARGS := -ldflags "\
+	-X $(REV_VAR) $(REPO_REV) \
+	-X $(VERSION_VAR) $(REPO_VERSION)"
 
-GO_TAG_ARGS ?= -tags full
+GO ?= go
+DEPPY ?= deppy
+
+GO_TAG_ARGS ?=
 
 ADDR := :8371
 export ADDR
 
+.PHONY: all
 all: clean golden
 
+.PHONY: test
 test: build
-	go test $(GO_TAG_ARGS) -x $(LIBS)
+	$(DEPPY) go test $(GO_TAG_ARGS) -x $(PACKAGE) $(SUBPACKAGES)
 
+.PHONY: build
 build: deps
-	go install $(GOBUILD_VERSION_ARGS) $(GO_TAG_ARGS) -x $(LIBS)
-	go build -o $${GOPATH%%:*}/bin/mithril-server $(GOBUILD_VERSION_ARGS) $(GO_TAG_ARGS) ./mithril-server
+	$(DEPPY) go install $(GOBUILD_VERSION_ARGS) $(GO_TAG_ARGS) -x $(PACKAGE) $(SUBPACKAGES)
+	$(DEPPY) go build -o $${GOPATH%%:*}/bin/mithril-server $(GOBUILD_VERSION_ARGS) $(GO_TAG_ARGS) ./mithril-server
 
-deps: johnny_deps
-	./johnny_deps
+.PHONY: deps
+deps:
+	$(DEPPY) restore
 
-johnny_deps:
-	curl -s -o $@ https://raw.github.com/VividCortex/johnny-deps/$(JOHNNY_DEPS_VERSION)/bin/johnny_deps
-	chmod +x $@
+.PHONY: save
+save:
+	$(DEPPY) save $(PACKAGE) $(SUBPACKAGES)
 
+.PHONY: clean
 clean:
-	go clean -x $(LIBS) || true
+	$(GO) clean -x $(PACKAGE) $(SUBPACKAGES) || true
 	if [ -d $${GOPATH%%:*}/pkg ] ; then \
-		find $${GOPATH%%:*}/pkg -name '*mithril*' -exec rm -v {} \; ; \
+		find $${GOPATH%%:*}/pkg -wholename '*modcloth-labs/mithril*' -exec $(RM) -v {} \; ; \
 	fi
-	rm -f .artifacts/*
+	$(RM) .artifacts/*
 
+.PHONY: distclean
 distclean: clean
-	rm -f ./johnny_deps
 
+.PHONY: serve
 serve:
 	$${GOPATH%%:*}/bin/mithril-server -d -a $(ADDR)
 
+.PHONY: golden
 golden: test
 	./runtests -v
-
-.PHONY: all build deps test clean distclean serve
