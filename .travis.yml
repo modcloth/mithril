@@ -23,6 +23,9 @@ before_install:
 - go get -x github.com/meatballhat/deppy
 install: make build
 script: make golden
+after_success:
+- mkdir -p build
+- cp -v ~/gopath/bin/mithril-server build/
 addons:
   artifacts:
     debug: '1'
@@ -31,6 +34,9 @@ addons:
       secure: jyc2YmclTdtcdi0vrzNDP/90UeZ6PwePVyorH8Hob3FvbJaNULThCG/jOsEfzEeTR6V0Utcz77xpHc79NcMadymva+0CeIhg0jz4aC+EoyC3LtU7hGZCdMJVAdnGCUvWdFZSmBh9VQlK6sH2m8q0U44R67QwXXdZWkNXVDFGMtk=
     secret:
       secure: cqghxNJC7kcwM/QS2/7MaPso7nPJIy66fc/uj2koqsX9CdIuW3mQtxMyqe2A//LR/GEVTl43cBIR9n2JZMnD+3uW9lN+/fvAUY0z1MBhU9fn+cb6YodF/Su67UgcBaYbROQFUTPF3p1ePvozsxSua0q4ZdR/wvaC8lqPUMTl+Dg=
+    on:
+    - go: 1.3.3
+      matrix: MITHRIL_PG_ENABLED='true' GO_TAG_ARGS=''
 notifications:
   email:
     recipients:
