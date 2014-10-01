@@ -1,4 +1,4 @@
-// +build pg full
+// +build !nil
 
 package store
 

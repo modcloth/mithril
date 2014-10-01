@@ -1,0 +1,21 @@
+{
+	"ImportPath": "github.com/modcloth-labs/mithril",
+	"GoVersion": "go1.3 darwin/amd64",
+	"Packages": [
+		"github.com/modcloth-labs/mithril",
+		"github.com/modcloth-labs/mithril/log",
+		"github.com/modcloth-labs/mithril/message",
+		"github.com/modcloth-labs/mithril/mithril-server",
+		"github.com/modcloth-labs/mithril/store"
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/lib/pq",
+			"Rev": "1fecc588012d280d01a531bf0ea1cfbc61db7207"
+		},
+		{
+			"ImportPath": "github.com/streadway/amqp",
+			"Rev": "171c24a86dfdd0ab079c4077500fd6bf59b6b00b"
+		}
+	]
+}
