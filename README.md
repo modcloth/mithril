@@ -7,6 +7,18 @@ HTTP -> AMQP proxy layer
 
 ## Development
 
+RabbitMQ is required. Reommended method of installation is Homebrew
+
+```bash
+brew install rabbitmq
+```
+
+Create the mithril_test database
+
+```bash
+createdb mithril_test
+```
+
 The build/test cycle uses `make` and should not require specification of
 a specific target:
 
