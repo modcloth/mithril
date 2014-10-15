@@ -13,7 +13,7 @@ RabbitMQ is required. Reommended method of installation is Homebrew
 brew install rabbitmq
 ```
 
-Create the mithril_test database
+Create the `mithril_test` database
 
 ```bash
 createdb mithril_test
