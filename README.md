@@ -19,6 +19,12 @@ Create the `mithril_test` database
 createdb mithril_test
 ```
 
+If you don't have RabbitMQ launched by default
+
+```bash
+rabbitmq-server
+```
+
 The build/test cycle uses `make` and should not require specification of
 a specific target:
 
