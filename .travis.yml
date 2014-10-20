@@ -49,3 +49,4 @@ deploy:
     repo: modcloth-labs/mithril
     tags: true
     all_branches: true
+    condition: "$MITHRIL_PG_ENABLED = true"
