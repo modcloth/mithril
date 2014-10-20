@@ -7,6 +7,7 @@ env:
   - MITHRIL_PG_URI='postgres://postgres@localhost?sslmode=disable'
   - MITHRIL_PG_DB_NAME='postgres'
   - MITHRIL_PG_USER='postgres'
+  - secure: GqP1+9llFOY/Ha8Nl+z/nZmHIZOV4/Fr+CTLEv9jjJBvkBm8acE/CWy0SqU1+AVrlIn0CjdKwP+CNQ1ETM4KxoD2MPkduBWTePxTedo4mQLWA6ZaAotG6T5SfsrWajpN2a455+LXn2ZeqQN3/frFz/OQesvtksi0VBspJsOJVXI=
   matrix:
   - MITHRIL_PG_ENABLED='true' GO_TAG_ARGS=''
   - MITHRIL_PG_ENABLED='false' GO_TAG_ARGS='-tags nil'
@@ -25,9 +26,10 @@ script: make golden
 after_success:
 - mkdir -p build
 - cp -v ~/gopath/bin/mithril-server build/
+- test $MITHRIL_PG_ENABLED == "true" && test $TRAVIS_TAG != "" && curl --data "build=true" -X POST https://registry.hub.docker.com/u/modcloth/mithril/trigger/$DOCKER_IO_TOKEN/
+
 addons:
   artifacts:
-    debug: '1'
     bucket: modcloth-public-travis-artifacts
     key:
       secure: jyc2YmclTdtcdi0vrzNDP/90UeZ6PwePVyorH8Hob3FvbJaNULThCG/jOsEfzEeTR6V0Utcz77xpHc79NcMadymva+0CeIhg0jz4aC+EoyC3LtU7hGZCdMJVAdnGCUvWdFZSmBh9VQlK6sH2m8q0U44R67QwXXdZWkNXVDFGMtk=
@@ -40,14 +42,3 @@ notifications:
   email:
     recipients:
     - github+mithril@modcloth.com
-deploy:
-  provider: releases
-  api_key:
-    secure: k0Kp9pAOWiERyVqj4DDnS4Q6w3U4b3ekd2Lru+4Spo2ylouQGtOBj78xfxzhoYcZrMBUSIPwmxXZgFQnCCAxWeyrDPc7biEJMT6goOTcHSNKw+z90RqlFAqWMUph0s9wC2pXB3V7bJRkoWf9m+kTk5YCnU63Eu5dlieohl2289w=
-  file: build/mithril-server
-  skip_cleanup: true
-  on:
-    repo: modcloth/mithril
-    tags: true
-    all_branches: true
-    condition: $MITHRIL_PG_ENABLED = true
