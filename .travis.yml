@@ -45,6 +45,7 @@ deploy:
   api_key:
     secure: JdPZvNLhs4/CabhvSe8/eyBCU+lAvuGp6wC+ndVpqr5+Hv9TIzuxFXvJwaT95TC71Lwf0//GlrDooi08z+t0+VVKGBfp4IlPFuqWMWiRne+/0ckpzDnNch/1AXvgIaTh281vBXpvDjBvGU2oKObVyLMPtpMlcWFNBmqb7JeeM+M=
   file: build/mithril-server
+  skip_cleanup: true
   on:
     repo: modcloth-labs/mithril
     tags: true
