@@ -1,6 +1,6 @@
 package store
 
-import "github.com/modcloth-labs/mithril/message"
+import "github.com/modcloth/mithril/message"
 
 type Driver interface {
 	Init(uri string) error

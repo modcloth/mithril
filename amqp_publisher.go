@@ -4,8 +4,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/modcloth-labs/mithril/log"
-	"github.com/modcloth-labs/mithril/message"
+	"github.com/modcloth/mithril/log"
+	"github.com/modcloth/mithril/message"
 	"github.com/streadway/amqp"
 )
 

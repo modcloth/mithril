@@ -8,9 +8,9 @@ import (
 
 	_ "net/http/pprof" // hey, why not
 
-	"github.com/modcloth-labs/mithril/log"
-	"github.com/modcloth-labs/mithril/message"
-	"github.com/modcloth-labs/mithril/store"
+	"github.com/modcloth/mithril/log"
+	"github.com/modcloth/mithril/message"
+	"github.com/modcloth/mithril/store"
 )
 
 const faviconBase64 = `

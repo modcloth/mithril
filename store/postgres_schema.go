@@ -3,7 +3,7 @@ package store
 import (
 	"database/sql"
 
-	"github.com/modcloth-labs/mithril/log"
+	"github.com/modcloth/mithril/log"
 )
 
 type pgSchemaEnsurer struct {

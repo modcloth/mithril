@@ -1,12 +1,12 @@
 {
-	"ImportPath": "github.com/modcloth-labs/mithril",
+	"ImportPath": "github.com/modcloth/mithril",
 	"GoVersion": "go1.3 darwin/amd64",
 	"Packages": [
-		"github.com/modcloth-labs/mithril",
-		"github.com/modcloth-labs/mithril/log",
-		"github.com/modcloth-labs/mithril/message",
-		"github.com/modcloth-labs/mithril/mithril-server",
-		"github.com/modcloth-labs/mithril/store"
+		"github.com/modcloth/mithril",
+		"github.com/modcloth/mithril/log",
+		"github.com/modcloth/mithril/message",
+		"github.com/modcloth/mithril/mithril-server",
+		"github.com/modcloth/mithril/store"
 	],
 	"Deps": [
 		{

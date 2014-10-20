@@ -1,11 +1,11 @@
-PACKAGE := github.com/modcloth-labs/mithril
+PACKAGE := github.com/modcloth/mithril
 SUBPACKAGES := \
 	$(PACKAGE)/log \
 	$(PACKAGE)/message \
 	$(PACKAGE)/mithril-server \
 	$(PACKAGE)/store
-REV_VAR := github.com/modcloth-labs/mithril.Rev
-VERSION_VAR := github.com/modcloth-labs/mithril.Version
+REV_VAR := github.com/modcloth/mithril.Rev
+VERSION_VAR := github.com/modcloth/mithril.Version
 REPO_VERSION := $(shell git describe --always --dirty --tags)
 REPO_REV := $(shell git rev-parse --sq HEAD)
 GOBUILD_VERSION_ARGS := -ldflags "\
@@ -44,7 +44,7 @@ save:
 clean:
 	$(GO) clean -x $(PACKAGE) $(SUBPACKAGES) || true
 	if [ -d $${GOPATH%%:*}/pkg ] ; then \
-		find $${GOPATH%%:*}/pkg -wholename '*modcloth-labs/mithril*' -exec $(RM) -v {} \; ; \
+		find $${GOPATH%%:*}/pkg -wholename '*modcloth/mithril*' -exec $(RM) -v {} \; ; \
 	fi
 	$(RM) .artifacts/*
 

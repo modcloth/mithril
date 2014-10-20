@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/modcloth-labs/mithril"
-	"github.com/modcloth-labs/mithril/log"
-	"github.com/modcloth-labs/mithril/store"
+	"github.com/modcloth/mithril"
+	"github.com/modcloth/mithril/log"
+	"github.com/modcloth/mithril/store"
 	"os"
 )
 
