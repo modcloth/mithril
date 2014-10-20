@@ -1,7 +1,7 @@
 mithril
 =======
 
-[![Build Status](https://travis-ci.org/modcloth/mithril.png?branch=master)](https://travis-ci.org/modcloth-labs/mithril)
+[![Build Status](https://travis-ci.org/modcloth/mithril.png?branch=master)](https://travis-ci.org/modcloth/mithril)
 
 HTTP -> AMQP proxy layer
 
