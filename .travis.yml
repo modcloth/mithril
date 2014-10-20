@@ -1,4 +1,3 @@
----
 language: go
 go:
 - 1.3.3
@@ -36,8 +35,17 @@ addons:
       secure: cqghxNJC7kcwM/QS2/7MaPso7nPJIy66fc/uj2koqsX9CdIuW3mQtxMyqe2A//LR/GEVTl43cBIR9n2JZMnD+3uW9lN+/fvAUY0z1MBhU9fn+cb6YodF/Su67UgcBaYbROQFUTPF3p1ePvozsxSua0q4ZdR/wvaC8lqPUMTl+Dg=
     on:
       go: 1.3.3
-      condition: $MITHRIL_PG_ENABLED = true
+      condition: "$MITHRIL_PG_ENABLED = true"
 notifications:
   email:
     recipients:
     - github+mithril@modcloth.com
+deploy:
+  provider: releases
+  api_key:
+    secure: JdPZvNLhs4/CabhvSe8/eyBCU+lAvuGp6wC+ndVpqr5+Hv9TIzuxFXvJwaT95TC71Lwf0//GlrDooi08z+t0+VVKGBfp4IlPFuqWMWiRne+/0ckpzDnNch/1AXvgIaTh281vBXpvDjBvGU2oKObVyLMPtpMlcWFNBmqb7JeeM+M=
+  file: build/mithril-server
+  on:
+    repo: modcloth-labs/mithril
+    tags: true
+    all_branches: true
