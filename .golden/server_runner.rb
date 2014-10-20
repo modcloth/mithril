@@ -1,6 +1,6 @@
 class ServerRunner
   attr_reader :server_binary, :addr, :port, :amqp_uri, :extra_args, :logfile
-  attr_reader :startup_sleep, :start_time, :server_pid, :pidfile
+  attr_reader :startup_sleep, :start_time, :server_pid
 
   def initialize(options = {})
     @start_time = options[:start] || Time.now.utc
@@ -12,7 +12,6 @@ class ServerRunner
       "../../.artifacts/mithril-server-#{start}-#{port}.log",
       __FILE__
     )
-    @pidfile = (options[:pidfile] || "mithril-server-#{@port}.pid")
     @amqp_uri = options[:amqp_uri] || 'amqp://guest:guest@localhost:5672'
     @extra_args = options[:extra_args] || ''
     @startup_sleep = Float(
@@ -29,7 +28,7 @@ class ServerRunner
     announce! "Starting mithril server with address #{addr.inspect}, " <<
     "amqp uri #{amqp_uri.inspect}"
     @server_pid = Process.spawn(
-      "#{server_binary} -p #{pidfile} #{extra_args} -d #{addr} #{amqp_uri} " <<
+      "#{server_binary} s #{extra_args} -b #{addr} -a #{amqp_uri} " <<
       ">> #{logfile} 2>&1"
     )
     sleep @startup_sleep
@@ -37,15 +36,10 @@ class ServerRunner
   end
 
   def stop
-    real_pid = Integer(File.read(pidfile).chomp) rescue nil
-    if server_pid && real_pid
-      announce! "Stopping mithril server with address #{addr} " <<
-                "(shell PID=#{server_pid}, server PID=#{real_pid})"
+    announce! "Stopping mithril server with address #{addr} " <<
+    "(shell PID=#{server_pid})"
 
-      [real_pid, server_pid].each do |pid|
-        Process.kill(:TERM, pid) rescue nil
-      end
-    end
+    Process.kill(:TERM, server_pid)
   end
 
   def dump_log

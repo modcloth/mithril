@@ -20,14 +20,12 @@ $servers = {
   amqp_only: ServerRunner.new(
     port: rand(9400..9449),
     start: Time.now.utc,
-    pidfile: File.expand_path('../.artifacts/mithril-server-amqp-only.pid', __FILE__),
   ),
 }
 if PG_ENABLED
   $servers[:with_pg] = ServerRunner.new(
     port: rand(9450..9499),
     start: Time.now.utc,
-    pidfile: File.expand_path('../.artifacts/mithril-server-with-pg.pid', __FILE__),
     extra_args: "-s postgresql -u='#{PG_URI}'"
   )
 end
@@ -104,28 +102,25 @@ if PG_ENABLED
   end
 end
 
-%w(r v).each do |arg|
-  describe "the -#{arg} arg" do
-    let(:server) do
-      ServerRunner.new(
-        port: rand(9450..9499),
-        start: Time.now.utc,
-        pidfile: File.expand_path('../.artifacts/rev-arg-test-server.pid', __FILE__),
-        extra_args: "-#{arg}"
-      )
-    end
+describe "the -v arg" do
+  let(:server) do
+    ServerRunner.new(
+      port: rand(9450..9499),
+      start: Time.now.utc,
+      extra_args: "-v"
+    )
+  end
 
-    before do
-      server.start
-    end
+  before do
+    server.start
+  end
 
-    it "produces a valid result" do
-      File.read(server.logfile).wont_match(/<unknown>/)
-    end
+  it "produces a valid result" do
+    File.read(server.logfile).wont_match(/<unknown>/)
+  end
 
-    after do
-      server.stop
-    end
+  after do
+    server.stop
   end
 end
 

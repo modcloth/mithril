@@ -39,7 +39,13 @@ func main() {
 					EnvVar: "MITHRIL_DEBUG",
 				},
 				cli.StringFlag{
-					Name:   "storage-uri, s",
+					Name:   "storage, s",
+					Usage:  "Which storage driver to use (see `list-storage` command).",
+					Value:  "",
+					EnvVar: "MITHRIL_STORAGE",
+				},
+				cli.StringFlag{
+					Name:   "storage-uri, u",
 					Usage:  "The url used by the storage driver.",
 					Value:  "",
 					EnvVar: "MITHRIL_STORAGE_URI",
@@ -47,14 +53,14 @@ func main() {
 				cli.StringFlag{
 					Name:   "amqp-uri, a",
 					Usage:  "The url of the AMQP server",
-					Value:  "amqp://localhost:5672",
+					Value:  "amqp://guest:guest@localhost:5672",
 					EnvVar: "MITHRIL_AMQP_URI",
 				},
 				cli.StringFlag{
 					Name:   "bind, b",
 					Usage:  "The address to bind to",
 					Value:  ":8371",
-					EnvVar: "MITHRIL_AMQP_URI",
+					EnvVar: "MITHRIL_BIND",
 				},
 			},
 		},
