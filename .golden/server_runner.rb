@@ -39,7 +39,7 @@ class ServerRunner
     announce! "Stopping mithril server with address #{addr} " <<
     "(shell PID=#{server_pid})"
 
-    Process.kill(:TERM, server_pid)
+    Process.kill(:TERM, server_pid) rescue nil
   end
 
   def dump_log
