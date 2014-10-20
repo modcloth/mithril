@@ -30,7 +30,7 @@ class ServerRunner
     @server_pid = Process.spawn(
       "#{server_binary} s #{extra_args} -b #{addr} -a #{amqp_uri} " <<
       ">> #{logfile} 2>&1"
-    )
+    ) + 1 # Unknown why we need to add one here
     sleep @startup_sleep
     @server_pid
   end

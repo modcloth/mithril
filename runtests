@@ -102,28 +102,6 @@ if PG_ENABLED
   end
 end
 
-describe "the -v arg" do
-  let(:server) do
-    ServerRunner.new(
-      port: rand(9450..9499),
-      start: Time.now.utc,
-      extra_args: "-v"
-    )
-  end
-
-  before do
-    server.start
-  end
-
-  it "produces a valid result" do
-    File.read(server.logfile).wont_match(/<unknown>/)
-  end
-
-  after do
-    server.stop
-  end
-end
-
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 def main(argv = [].freeze)
