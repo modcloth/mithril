@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/modcloth/mithril",
-	"GoVersion": "go1.3 darwin/amd64",
+	"GoVersion": "go1.3.3",
 	"Packages": [
 		"github.com/modcloth/mithril",
 		"github.com/modcloth/mithril/log",
@@ -9,6 +9,11 @@
 		"github.com/modcloth/mithril/store"
 	],
 	"Deps": [
+		{
+			"ImportPath": "github.com/codegangsta/cli",
+			"Comment": "1.2.0-24-g7381bc4",
+			"Rev": "7381bc4e62942763475703c7edd405f1e42adf4f"
+		},
 		{
 			"ImportPath": "github.com/lib/pq",
 			"Rev": "1fecc588012d280d01a531bf0ea1cfbc61db7207"

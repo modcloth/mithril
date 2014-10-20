@@ -2,45 +2,75 @@ package main
 
 import (
 	"fmt"
+	"os"
+
+	"github.com/codegangsta/cli"
+
 	"github.com/modcloth/mithril"
 	"github.com/modcloth/mithril/log"
 	"github.com/modcloth/mithril/store"
-	"os"
 )
 
 func main() {
-	config := mithril.NewConfigurationFromFlags()
+	app := cli.NewApp()
+	app.Usage = "HTTP -> AMQP proxy"
+	app.Version = fmt.Sprintf("%s (%s)", mithril.Version, mithril.Rev)
+	app.Commands = []cli.Command{
+		{
+			Name:        "server",
+			ShortName:   "s",
+			Usage:       "start server",
+			Description: "Start the AMQP -> HTTP proxy server",
+			Action: func(c *cli.Context) {
+				config := mithril.NewConfigurationFromContext(c)
 
-	if config.DisplayVersion {
-		fmt.Println(mithril.ProgVersion())
+				log.Initialize(config.EnableDebug)
+				log.Println("Initializing Mithril...")
+				if server, err := mithril.NewServer(config); err != nil {
+					log.Fatal(err)
+				} else {
+					server.Serve()
+				}
+			},
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:   "debug, d",
+					Usage:  "Enable debug logging.",
+					EnvVar: "MITHRIL_DEBUG",
+				},
+				cli.StringFlag{
+					Name:   "storage-uri, s",
+					Usage:  "The url used by the storage driver.",
+					Value:  "",
+					EnvVar: "MITHRIL_STORAGE_URI",
+				},
+				cli.StringFlag{
+					Name:   "amqp-uri, a",
+					Usage:  "The url of the AMQP server",
+					Value:  "amqp://localhost:5672",
+					EnvVar: "MITHRIL_AMQP_URI",
+				},
+				cli.StringFlag{
+					Name:   "bind, b",
+					Usage:  "The address to bind to",
+					Value:  ":8371",
+					EnvVar: "MITHRIL_AMQP_URI",
+				},
+			},
+		},
+		{
+			Name:        "list-storage",
+			ShortName:   "l",
+			Usage:       "list storage backends",
+			Description: "List the avaliable storage backends for Mithril",
+			Action: func(c *cli.Context) {
+				store.ShowStorage()
+			},
+		},
 	}
 
-	if config.DisplayRev {
-		fmt.Println(mithril.Rev)
-	}
-
-	if config.ShowStorage {
-		store.ShowStorage()
-	}
-
-	if config.ExitImmediate {
-		os.Exit(1)
-	}
-
-	if len(config.PidFile) > 0 {
-		if pidFile, err := os.Create(config.PidFile); err != nil {
-			log.Fatal(err)
-		} else {
-			defer func() { os.Remove(config.PidFile) }()
-			fmt.Fprintf(pidFile, "%d\n", os.Getpid())
-		}
-	}
-
-	log.Initialize(config.EnableDebug)
-	log.Println("Initializing Mithril...")
-	if server, err := mithril.NewServer(config); err != nil {
-		log.Fatal(err)
-	} else {
-		server.Serve()
+	err := app.Run(os.Args)
+	if err != nil {
+		fmt.Println(err)
 	}
 }
