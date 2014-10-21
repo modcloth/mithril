@@ -28,9 +28,9 @@ class ServerRunner
     announce! "Starting mithril server with address #{addr.inspect}, " <<
     "amqp uri #{amqp_uri.inspect}"
     @server_pid = Process.spawn(
-      "#{server_binary} s #{extra_args} -b #{addr} -a #{amqp_uri} " <<
+      "exec #{server_binary} s #{extra_args} -b #{addr} -a #{amqp_uri} " <<
       ">> #{logfile} 2>&1"
-    ) + 1 # Unknown why we need to add one here
+    )
     sleep @startup_sleep
     @server_pid
   end
