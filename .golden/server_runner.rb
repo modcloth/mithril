@@ -1,6 +1,6 @@
 class ServerRunner
   attr_reader :server_binary, :addr, :port, :amqp_uri, :extra_args, :logfile
-  attr_reader :startup_sleep, :start_time, :server_pid
+  attr_reader :startup_sleep, :start_time, :server_pid, :global_args
 
   def initialize(options = {})
     @start_time = options[:start] || Time.now.utc
@@ -14,6 +14,7 @@ class ServerRunner
     )
     @amqp_uri = options[:amqp_uri] || 'amqp://guest:guest@localhost:5672'
     @extra_args = options[:extra_args] || ''
+    @global_args = options[:global_args] || ''
     @startup_sleep = Float(
       options[:startup_sleep] || ENV['MITHRIL_STARTUP_SLEEP'] || 0.5
     )
@@ -28,7 +29,7 @@ class ServerRunner
     announce! "Starting mithril server with address #{addr.inspect}, " <<
     "amqp uri #{amqp_uri.inspect}"
     @server_pid = Process.spawn(
-      "exec #{server_binary} s #{extra_args} -b #{addr} -a #{amqp_uri} " <<
+      "exec #{server_binary} #{global_args} s #{extra_args} -b #{addr} -a #{amqp_uri} " <<
       ">> #{logfile} 2>&1"
     )
     sleep @startup_sleep
