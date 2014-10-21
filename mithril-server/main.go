@@ -17,7 +17,7 @@ func main() {
 	app.Version = fmt.Sprintf("%s (%s)", mithril.Version, mithril.Rev)
 	app.Commands = []cli.Command{
 		{
-			Name:        "server",
+			Name:        "serve",
 			ShortName:   "s",
 			Usage:       "start server",
 			Description: "Start the AMQP -> HTTP proxy server",
