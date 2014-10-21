@@ -38,6 +38,14 @@ expensive one-time prerequisites are out of the way, the cycle should be
 between 3-7 seconds.  If your build cycle is taking considerably longer,
 please file an issue.
 
+A docker image exists for this application on docker.io's registry
+[https://registry.hub.docker.com/u/modcloth/mithril/](https://registry.hub.docker.com/u/modcloth/mithril/).
+
+## CI
+
+Tagging this repo will cause Travis CI to queue a build of the Dockerfile on
+docker.io on successful build. This build will be tagged as latest.
+
 ### Troubleshooting
 
 #### `command not found: psql`, or other failures related to PostgreSQL
