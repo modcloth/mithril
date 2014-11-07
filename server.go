@@ -49,25 +49,11 @@ func init() {
 	faviconBytes, _ = base64.StdEncoding.DecodeString(faviconBase64)
 }
 
-func NewServer(configuration *Configuration) (*Server, error) {
-	var (
-		storer *store.Storage
-		amqp   *AMQPPublisher
-		err    error
-	)
-
-	if storer, err = store.Open(configuration.Storage, configuration.StorageUri); err != nil {
-		return nil, err
-	}
-
-	if amqp, err = NewAMQPPublisher(configuration.AmqpUri); err != nil {
-		return nil, err
-	}
-
+func NewServer(storer *store.Storage, amqp *AMQPPublisher) *Server {
 	return &Server{
 		storage: storer,
 		amqp:    amqp,
-	}, nil
+	}
 }
 
 func (me *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

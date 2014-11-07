@@ -72,14 +72,17 @@ func main() {
 					os.Exit(1)
 				}
 
-				config := mithril.NewConfigurationFromContext(c)
-
-				server, err := mithril.NewServer(config)
+				storer, err := store.Open(c.String("storage"), c.String("storage-uri"))
 				if err != nil {
 					log.Fatal(err)
 				}
 
-				http.Handle("/", server)
+				amqp, err := mithril.NewAMQPPublisher(c.String("amqp-uri"))
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				http.Handle("/", mithril.NewServer(storer, amqp))
 				log.Infof("Serving on %s", c.String("bind"))
 				log.Fatal(http.ListenAndServe(c.String("bind"), nil))
 			},
