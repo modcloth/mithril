@@ -41,11 +41,6 @@ $servers.each do |server_type,server|
       res = Net::HTTP.get_response('localhost', '/jazz/pant', server.port)
       res.code.must_equal '405'
     end
-
-    it 'serves a favicon' do
-      res = Net::HTTP.get_response('localhost', '/favicon.ico', server.port)
-      res['Content-Type'].must_equal 'image/vnd.microsoft.icon'
-    end
   end
 end
 
