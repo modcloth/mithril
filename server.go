@@ -67,14 +67,7 @@ func NewServer(configuration *Configuration) (*Server, error) {
 	return &Server{
 		storage: storer,
 		amqp:    amqp,
-		address: configuration.ServerAddress,
 	}, nil
-}
-
-func (me *Server) Serve() {
-	http.Handle("/", me)
-	log.Infof("Serving on %s", me.address)
-	log.Fatal(http.ListenAndServe(me.address, nil))
 }
 
 func (me *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

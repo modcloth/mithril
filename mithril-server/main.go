@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 
@@ -73,11 +74,14 @@ func main() {
 
 				config := mithril.NewConfigurationFromContext(c)
 
-				if server, err := mithril.NewServer(config); err != nil {
+				server, err := mithril.NewServer(config)
+				if err != nil {
 					log.Fatal(err)
-				} else {
-					server.Serve()
 				}
+
+				http.Handle("/", server)
+				log.Infof("Serving on %s", c.String("bind"))
+				log.Fatal(http.ListenAndServe(c.String("bind"), nil))
 			},
 			Flags: []cli.Flag{
 				cli.BoolFlag{
