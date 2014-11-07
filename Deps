@@ -11,16 +11,16 @@
 	"Deps": [
 		{
 			"ImportPath": "github.com/codegangsta/cli",
-			"Comment": "1.2.0-24-g7381bc4",
-			"Rev": "7381bc4e62942763475703c7edd405f1e42adf4f"
+			"Comment": "1.2.0-26-gf7ebb76",
+			"Rev": "f7ebb761e83e21225d1d8954fde853bf8edd46c4"
 		},
 		{
 			"ImportPath": "github.com/lib/pq",
-			"Rev": "1fecc588012d280d01a531bf0ea1cfbc61db7207"
+			"Rev": "7175accbed18058468c07811f76440d6e8d7cf19"
 		},
 		{
 			"ImportPath": "github.com/streadway/amqp",
-			"Rev": "171c24a86dfdd0ab079c4077500fd6bf59b6b00b"
+			"Rev": "6ffc9248c4b16699477e7411084c2402f2f0c351"
 		}
 	]
 }

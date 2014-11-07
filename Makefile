@@ -25,12 +25,12 @@ all: clean golden
 
 .PHONY: test
 test: build
-	$(DEPPY) go test $(GO_TAG_ARGS) -x $(PACKAGE) $(SUBPACKAGES)
+	go test $(GO_TAG_ARGS) -x $(PACKAGE) $(SUBPACKAGES)
 
 .PHONY: build
 build: deps
-	$(DEPPY) go install $(GOBUILD_VERSION_ARGS) $(GO_TAG_ARGS) -x $(PACKAGE) $(SUBPACKAGES)
-	$(DEPPY) go build -o $${GOPATH%%:*}/bin/mithril-server $(GOBUILD_VERSION_ARGS) $(GO_TAG_ARGS) ./mithril-server
+	go install $(GOBUILD_VERSION_ARGS) $(GO_TAG_ARGS) -x $(PACKAGE) $(SUBPACKAGES)
+	go build -o $${GOPATH%%:*}/bin/mithril-server $(GOBUILD_VERSION_ARGS) $(GO_TAG_ARGS) ./mithril-server
 
 .PHONY: deps
 deps:
