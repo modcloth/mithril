@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"strings"
 
 	"github.com/Sirupsen/logrus"
 	log "github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
+	"github.com/codegangsta/negroni"
 
+	"github.com/meatballhat/negroni-logrus"
 	"github.com/modcloth/mithril"
 	"github.com/modcloth/mithril/store"
 )
@@ -66,7 +67,12 @@ func main() {
 			Usage:       "start server",
 			Description: "Start the AMQP -> HTTP proxy server",
 			Action: func(c *cli.Context) {
-				err := initializeLogger(c)
+				level, err := getLogLevel(c)
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+				formatter, err := getLogFormatter(c)
 				if err != nil {
 					fmt.Println(err)
 					os.Exit(1)
@@ -82,9 +88,9 @@ func main() {
 					log.Fatal(err)
 				}
 
-				http.Handle("/", mithril.NewServer(storer, amqp))
-				log.Infof("Serving on %s", c.String("bind"))
-				log.Fatal(http.ListenAndServe(c.String("bind"), nil))
+				n := negroni.New(negroni.NewRecovery(), negronilogrus.NewCustomMiddleware(level, formatter, "mithril"))
+				n.UseHandler(mithril.NewServer(storer, amqp))
+				n.Run(c.String("bind"))
 			},
 			Flags: []cli.Flag{
 				cli.BoolFlag{
@@ -135,18 +141,20 @@ func main() {
 	}
 }
 
-func initializeLogger(c *cli.Context) (err error) {
+func getLogLevel(c *cli.Context) (level logrus.Level, err error) {
 	level, ok := logLevels[c.GlobalString("log-level")]
 	if !ok {
-		return fmt.Errorf("invalid log level %s", c.GlobalString("log-level"))
+		return 0, fmt.Errorf("invalid log level %s", c.GlobalString("log-level"))
 	}
-	log.SetLevel(level)
 
+	return level, nil
+}
+
+func getLogFormatter(c *cli.Context) (formatter logrus.Formatter, err error) {
 	formatter, ok := logFormats[c.GlobalString("log-format")]
 	if !ok {
-		return fmt.Errorf("invalid log format %s", c.GlobalString("log-format"))
+		return nil, fmt.Errorf("invalid log format %s", c.GlobalString("log-format"))
 	}
-	log.SetFormatter(formatter)
 
-	return nil
+	return formatter, nil
 }

@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
-	"time"
 
 	log "github.com/Sirupsen/logrus"
 
@@ -57,11 +56,6 @@ func NewServer(storer *store.Storage, amqp *AMQPPublisher) *Server {
 }
 
 func (me *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	startTime := time.Now()
-	r.Close = true
-
-	log.Debugf("%s %s Headers: %+v", r.Method, r.URL.Path, r.Header)
-
 	if r.Method == "POST" || r.Method == "PUT" {
 		me.processMessage(w, r)
 	} else if r.Method == "GET" && r.URL.Path == "/favicon.ico" {
@@ -72,9 +66,6 @@ func (me *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.StatusMethodNotAllowed,
 			w)
 	}
-
-	log.Infof("Request handled in %s.\n", time.Now().Sub(startTime))
-	return
 }
 
 func (me *Server) processMessage(w http.ResponseWriter, r *http.Request) {
