@@ -93,11 +93,6 @@ func main() {
 				n.Run(c.String("bind"))
 			},
 			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:   "debug, d",
-					Usage:  "Enable debug logging.",
-					EnvVar: "MITHRIL_DEBUG",
-				},
 				cli.StringFlag{
 					Name:   "storage, s",
 					Usage:  "Which storage driver to use (see `list-storage` command).",
