@@ -3,18 +3,64 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
+	"github.com/Sirupsen/logrus"
+	log "github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
+	"github.com/codegangsta/negroni"
+	"github.com/jingweno/negroni-gorelic"
 
+	"github.com/meatballhat/negroni-logrus"
 	"github.com/modcloth/mithril"
-	"github.com/modcloth/mithril/log"
 	"github.com/modcloth/mithril/store"
 )
 
+var (
+	logLevels = map[string]logrus.Level{
+		"debug": logrus.DebugLevel,
+		"info":  logrus.InfoLevel,
+		"warn":  logrus.WarnLevel,
+		"error": logrus.ErrorLevel,
+		"fatal": logrus.FatalLevel,
+		"panic": logrus.PanicLevel,
+	}
+
+	logFormats = map[string]logrus.Formatter{
+		"text": new(logrus.TextFormatter),
+		"json": new(logrus.JSONFormatter),
+	}
+)
+
 func main() {
+	var (
+		logLevelOptions  []string
+		logFormatOptions []string
+	)
+
+	for s := range logLevels {
+		logLevelOptions = append(logLevelOptions, s)
+	}
+
+	for s := range logFormats {
+		logFormatOptions = append(logFormatOptions, s)
+	}
+
 	app := cli.NewApp()
 	app.Usage = "HTTP -> AMQP proxy"
 	app.Version = fmt.Sprintf("%s (%s)", mithril.Version, mithril.Rev)
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "log-level, l",
+			Value: "info",
+			Usage: fmt.Sprintf("Log level (options: %s)", strings.Join(logLevelOptions, ",")),
+		},
+		cli.StringFlag{
+			Name:  "log-format, f",
+			Value: "text",
+			Usage: fmt.Sprintf("Log format (options: %s)", strings.Join(logFormatOptions, ",")),
+		},
+	}
 	app.Commands = []cli.Command{
 		{
 			Name:        "serve",
@@ -22,22 +68,44 @@ func main() {
 			Usage:       "start server",
 			Description: "Start the AMQP -> HTTP proxy server",
 			Action: func(c *cli.Context) {
-				config := mithril.NewConfigurationFromContext(c)
-
-				log.Initialize(config.EnableDebug)
-				log.Println("Initializing Mithril...")
-				if server, err := mithril.NewServer(config); err != nil {
-					log.Fatal(err)
-				} else {
-					server.Serve()
+				level, err := getLogLevel(c)
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
 				}
+				formatter, err := getLogFormatter(c)
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+
+				storer, err := store.Open(c.String("storage"), c.String("storage-uri"))
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				amqp, err := mithril.NewAMQPPublisher(c.String("amqp-uri"))
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				n := negroni.New(negroni.NewRecovery(), negronilogrus.NewCustomMiddleware(level, formatter, "mithril"))
+
+				if c.GlobalBool("new-relic-agent-enabled") {
+					if c.GlobalString("new-relic-license-key") == "" {
+						log.Warn("newrelic license key is absent")
+					} else {
+						n.Use(negronigorelic.New(
+							c.GlobalString("new-relic-license-key"),
+							fmt.Sprintf("[%s] %s", c.GlobalString("new-relic-env"), "Mithril"),
+							c.GlobalBool("new-relic-verbose")))
+					}
+				}
+
+				n.UseHandler(mithril.NewServer(storer, amqp))
+				n.Run(c.String("bind"))
 			},
 			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:   "debug, d",
-					Usage:  "Enable debug logging.",
-					EnvVar: "MITHRIL_DEBUG",
-				},
 				cli.StringFlag{
 					Name:   "storage, s",
 					Usage:  "Which storage driver to use (see `list-storage` command).",
@@ -62,6 +130,26 @@ func main() {
 					Value:  ":8371",
 					EnvVar: "MITHRIL_BIND",
 				},
+				cli.BoolTFlag{
+					Name:   "new-relic-enabled, E",
+					Usage:  "Enable the NewRelic agent",
+					EnvVar: "NEW_RELIC_AGENT_ENABLED",
+				},
+				cli.StringFlag{
+					Name:   "new-relic-license-key, n",
+					Usage:  "New Relic License Key",
+					EnvVar: "NEW_RELIC_LICENSE_KEY",
+				},
+				cli.StringFlag{
+					Name:   "new-relic-env, e",
+					Usage:  "New Relic Env",
+					EnvVar: "NEW_RELIC_ENV",
+				},
+				cli.BoolFlag{
+					Name:   "new-relic-verbose, V",
+					Usage:  "New Relic Logging Level",
+					EnvVar: "NEW_RELIC_VERBOSE",
+				},
 			},
 		},
 		{
@@ -79,4 +167,22 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+func getLogLevel(c *cli.Context) (level logrus.Level, err error) {
+	level, ok := logLevels[c.GlobalString("log-level")]
+	if !ok {
+		return 0, fmt.Errorf("invalid log level %s", c.GlobalString("log-level"))
+	}
+
+	return level, nil
+}
+
+func getLogFormatter(c *cli.Context) (formatter logrus.Formatter, err error) {
+	formatter, ok := logFormats[c.GlobalString("log-format")]
+	if !ok {
+		return nil, fmt.Errorf("invalid log format %s", c.GlobalString("log-format"))
+	}
+
+	return formatter, nil
 }

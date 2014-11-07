@@ -3,7 +3,7 @@ package store
 import (
 	"database/sql"
 
-	"github.com/modcloth/mithril/log"
+	log "github.com/Sirupsen/logrus"
 )
 
 type pgSchemaEnsurer struct {
@@ -56,7 +56,7 @@ func (me *pgSchemaEnsurer) runMigrations() error {
 			continue
 		}
 
-		log.Printf("pg - Executing postgresql migration %s\n", schemaVersion)
+		log.Infof("pg - Executing postgresql migration %s\n", schemaVersion)
 		if err := me.migrateTo(schemaVersion, sqls); err != nil {
 			return err
 		}

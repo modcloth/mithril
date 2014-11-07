@@ -1,8 +1,9 @@
 package store
 
 import (
-	"github.com/modcloth/mithril/log"
 	"github.com/modcloth/mithril/message"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 type nilstore struct {
@@ -12,7 +13,7 @@ func init() {
 	register("", &nilstore{})
 }
 func (me *nilstore) Init(url string) error {
-	log.Println("Using the nil logger, no messages will be stored")
+	log.Info("Using the nil logger, no messages will be stored")
 	return nil
 }
 func (me *nilstore) UriFormat() string {

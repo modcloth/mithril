@@ -4,8 +4,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/modcloth/mithril/log"
 	"github.com/modcloth/mithril/message"
+
+	log "github.com/Sirupsen/logrus"
 	"github.com/streadway/amqp"
 )
 
@@ -46,7 +47,7 @@ func (me *AMQPPublisher) Publish(req *message.Message) error {
 
 	amqpReq = me.adaptHttpRequest(req)
 	if err = me.publishAdaptedRequest(amqpReq); err != nil {
-		log.Println("amqp - Failed to publish request:", err)
+		log.Warnf("amqp - Failed to publish request: %v", err)
 		return err
 	}
 	return nil
@@ -60,28 +61,28 @@ func (me *AMQPPublisher) establishConnection() (err error) {
 		return
 	}
 
-	log.Printf("amqp - no RabbitMQ connection found, establishing new connection...")
+	log.Info("amqp - no RabbitMQ connection found, establishing new connection...")
 	me.amqpConn, err = amqp.Dial(me.amqpUri)
 	if err != nil {
 		return err
 	}
-	log.Printf("amqp - connected to RabbitMQ")
+	log.Debug("amqp - connected to RabbitMQ")
 
-	log.Printf("amqp - creating channel...")
+	log.Debug("amqp - creating channel...")
 	me.handlingChannel, err = me.amqpConn.Channel()
 	if err != nil {
 		return err
 	}
-	log.Printf("amqp - channel created")
+	log.Debug("amqp - channel created")
 
-	log.Printf("amqp - setting confirm mode...")
+	log.Debug("amqp - setting confirm mode...")
 	if err = me.handlingChannel.Confirm(false); err != nil {
 		return err
 	}
-	log.Printf("amqp - confirm mode set")
+	log.Debug("amqp - confirm mode set")
 
 	me.confirmAck, me.confirmNack = me.handlingChannel.NotifyConfirm(make(chan uint64, 1), make(chan uint64, 1))
-	log.Printf("amqp - notify confirm channels created.")
+	log.Debug("amqp - notify confirm channels created.")
 
 	go func() {
 		closeChan := me.handlingChannel.NotifyClose(make(chan *amqp.Error))
@@ -93,7 +94,7 @@ func (me *AMQPPublisher) establishConnection() (err error) {
 		}
 	}()
 
-	log.Printf("amqp - Ready to publish messages!")
+	log.Info("amqp - Ready to publish messages!")
 	return nil
 }
 

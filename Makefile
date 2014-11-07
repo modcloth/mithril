@@ -1,9 +1,3 @@
-PACKAGE := github.com/modcloth/mithril
-SUBPACKAGES := \
-	$(PACKAGE)/log \
-	$(PACKAGE)/message \
-	$(PACKAGE)/mithril-server \
-	$(PACKAGE)/store
 REV_VAR := github.com/modcloth/mithril.Rev
 VERSION_VAR := github.com/modcloth/mithril.Version
 REPO_VERSION := $(shell git describe --always --dirty --tags)
@@ -25,12 +19,12 @@ all: clean golden
 
 .PHONY: test
 test: build
-	$(DEPPY) go test $(GO_TAG_ARGS) -x $(PACKAGE) $(SUBPACKAGES)
+	go test $(GO_TAG_ARGS) -x ./...
 
 .PHONY: build
 build: deps
-	$(DEPPY) go install $(GOBUILD_VERSION_ARGS) $(GO_TAG_ARGS) -x $(PACKAGE) $(SUBPACKAGES)
-	$(DEPPY) go build -o $${GOPATH%%:*}/bin/mithril-server $(GOBUILD_VERSION_ARGS) $(GO_TAG_ARGS) ./mithril-server
+	go install $(GOBUILD_VERSION_ARGS) $(GO_TAG_ARGS) -x ./...
+	go build -o $${GOPATH%%:*}/bin/mithril-server $(GOBUILD_VERSION_ARGS) $(GO_TAG_ARGS) ./mithril-server
 
 .PHONY: deps
 deps:
@@ -38,11 +32,11 @@ deps:
 
 .PHONY: save
 save:
-	$(DEPPY) save $(PACKAGE) $(SUBPACKAGES)
+	$(DEPPY) save ./...
 
 .PHONY: clean
 clean:
-	$(GO) clean -x $(PACKAGE) $(SUBPACKAGES) || true
+	$(GO) clean -x ./...
 	if [ -d $${GOPATH%%:*}/pkg ] ; then \
 		find $${GOPATH%%:*}/pkg -wholename '*modcloth/mithril*' -exec $(RM) -v {} \; ; \
 	fi
