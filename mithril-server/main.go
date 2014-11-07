@@ -91,14 +91,14 @@ func main() {
 
 				n := negroni.New(negroni.NewRecovery(), negronilogrus.NewCustomMiddleware(level, formatter, "mithril"))
 
-				if c.GlobalBool("new-relic-agent-enabled") {
-					if c.GlobalString("new-relic-license-key") == "" {
+				if c.Bool("new-relic-agent-enabled") {
+					if c.String("new-relic-license-key") == "" {
 						log.Warn("newrelic license key is absent")
 					} else {
 						n.Use(negronigorelic.New(
-							c.GlobalString("new-relic-license-key"),
-							fmt.Sprintf("[%s] %s", c.GlobalString("new-relic-env"), "Mithril"),
-							c.GlobalBool("new-relic-verbose")))
+							c.String("new-relic-license-key"),
+							fmt.Sprintf("[%s] %s", c.String("new-relic-env"), "Mithril"),
+							c.Bool("new-relic-verbose")))
 					}
 				}
 
