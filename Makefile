@@ -1,6 +1,5 @@
 PACKAGE := github.com/modcloth/mithril
 SUBPACKAGES := \
-	$(PACKAGE)/log \
 	$(PACKAGE)/message \
 	$(PACKAGE)/mithril-server \
 	$(PACKAGE)/store

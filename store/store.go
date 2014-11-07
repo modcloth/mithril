@@ -3,8 +3,9 @@ package store
 import (
 	"fmt"
 
-	"github.com/modcloth/mithril/log"
 	"github.com/modcloth/mithril/message"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 type Storage struct {
@@ -38,7 +39,7 @@ func Open(name string, uri string) (*Storage, error) {
 	}
 
 	if name != "" {
-		log.Printf("Persisting messages to: %s.\n", name)
+		log.Infof("Persisting messages to: %s.\n", name)
 	}
 	if err := driver.Init(uri); err != nil {
 		return nil, err

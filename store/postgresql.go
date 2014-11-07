@@ -6,9 +6,10 @@ import (
 	"database/sql"
 	"sync"
 
-	"github.com/lib/pq"
-	"github.com/modcloth/mithril/log"
 	"github.com/modcloth/mithril/message"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/lib/pq"
 )
 
 type psql struct {
@@ -23,22 +24,22 @@ func init() {
 }
 
 func (me *psql) Init(url string) (err error) {
-	log.Println("pg - Parsing url")
+	log.Debug("pg - Parsing url")
 	if me.conn, err = pq.ParseURL(url); err != nil {
-		log.Printf("The postgresql url specified could not be parsed.\nurl: %s\nerr: %s\n", url, err)
+		log.Errorf("The postgresql url specified could not be parsed.\nurl: %s\nerr: %s\n", url, err)
 		return err
 	}
-	log.Println("pg - Parsed url")
+	log.Debug("pg - Parsed url")
 
 	if err = me.establishConnection(); err != nil {
 		return err
 	}
 
-	log.Println("pg - Verifying database schema and performing migrations if necessary")
+	log.Debug("pg - Verifying database schema and performing migrations if necessary")
 	if err = newPGSchemaEnsurer(me.db).EnsureSchema(); err != nil {
 		return err
 	}
-	log.Println("pg - Schema verification complete")
+	log.Debug("pg - Schema verification complete")
 
 	if err = me.PrepareStatement(); err != nil {
 		return err
@@ -72,13 +73,13 @@ func (me *psql) Store(msg *message.Message) (err error) {
 	if err != nil {
 		me.db.Close()
 		me.db = nil
-		log.Printf("pg - Failed to store message: %+v", err)
+		log.Warnf("pg - Failed to store message: %+v", err)
 	}
 	return err
 }
 
 func (me *psql) PrepareStatement() (err error) {
-	log.Println("pg - Preparing mithril request statement")
+	log.Debug("pg - Preparing mithril request statement")
 	me.stmt, err = me.db.Prepare(`INSERT INTO mithril_requests (
 								  message_id,
 								  correlation_id,
@@ -92,25 +93,25 @@ func (me *psql) PrepareStatement() (err error) {
 								  body_bytes)
 								  VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`)
 	if err != nil {
-		log.Printf("pg - An error occurred while preparing the insert statement: %s\n", err)
+		log.Errorf("pg - An error occurred while preparing the insert statement: %s\n", err)
 	}
 	return err
 }
 
 func (me *psql) establishConnection() (err error) {
-	log.Println("pg - Establishing connection to postgresql server")
+	log.Info("pg - Establishing connection to postgresql server")
 	me.db, err = sql.Open("postgres", me.conn)
 	if err != nil {
-		log.Printf("pg - An error occurred while preparing the insert statement: %s\n", err)
+		log.Errorf("pg - An error occurred while preparing the insert statement: %s\n", err)
 		return err
 	}
 
-	log.Println("pg - Connection established")
+	log.Info("pg - Connection established")
 	return nil
 }
 
 func (me *psql) restablishConnection() (err error) {
-	log.Println("pg - Detected reconnection to postgresql server is needed")
+	log.Info("pg - Detected reconnection to postgresql server is needed")
 	if err = me.establishConnection(); err != nil {
 		return err
 	}
@@ -118,6 +119,6 @@ func (me *psql) restablishConnection() (err error) {
 	if err = me.PrepareStatement(); err != nil {
 		return err
 	}
-	log.Println("pg - Reconnection successful")
+	log.Info("pg - Reconnection successful")
 	return nil
 }

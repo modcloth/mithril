@@ -6,9 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	_ "net/http/pprof" // hey, why not
+	log "github.com/Sirupsen/logrus"
 
-	"github.com/modcloth/mithril/log"
 	"github.com/modcloth/mithril/message"
 	"github.com/modcloth/mithril/store"
 )
@@ -74,7 +73,7 @@ func NewServer(configuration *Configuration) (*Server, error) {
 
 func (me *Server) Serve() {
 	http.Handle("/", me)
-	log.Println("Serving on", me.address)
+	log.Infof("Serving on %s", me.address)
 	log.Fatal(http.ListenAndServe(me.address, nil))
 }
 
@@ -82,7 +81,7 @@ func (me *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
 	r.Close = true
 
-	log.Printf("%s %s Headers: %+v", r.Method, r.URL.Path, r.Header)
+	log.Debugf("%s %s Headers: %+v", r.Method, r.URL.Path, r.Header)
 
 	if r.Method == "POST" || r.Method == "PUT" {
 		me.processMessage(w, r)
@@ -95,7 +94,7 @@ func (me *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			w)
 	}
 
-	log.Printf("Request handled in %s.\n", time.Now().Sub(startTime))
+	log.Infof("Request handled in %s.\n", time.Now().Sub(startTime))
 	return
 }
 
@@ -109,7 +108,7 @@ func (me *Server) processMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println("Processing message: ", msg.MessageId)
+	log.Infof("Processing message: ", msg.MessageId)
 	if err = me.storage.Store(msg); err != nil {
 		me.respondErr(err, http.StatusBadRequest, w)
 		return

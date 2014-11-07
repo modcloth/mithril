@@ -3,18 +3,61 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
+	"github.com/Sirupsen/logrus"
+	log "github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
 
 	"github.com/modcloth/mithril"
-	"github.com/modcloth/mithril/log"
 	"github.com/modcloth/mithril/store"
 )
 
+var (
+	logLevels = map[string]logrus.Level{
+		"debug": logrus.DebugLevel,
+		"info":  logrus.InfoLevel,
+		"warn":  logrus.WarnLevel,
+		"error": logrus.ErrorLevel,
+		"fatal": logrus.FatalLevel,
+		"panic": logrus.PanicLevel,
+	}
+
+	logFormats = map[string]logrus.Formatter{
+		"text": new(logrus.TextFormatter),
+		"json": new(logrus.JSONFormatter),
+	}
+)
+
 func main() {
+	var (
+		logLevelOptions  []string
+		logFormatOptions []string
+	)
+
+	for s := range logLevels {
+		logLevelOptions = append(logLevelOptions, s)
+	}
+
+	for s := range logFormats {
+		logFormatOptions = append(logFormatOptions, s)
+	}
+
 	app := cli.NewApp()
 	app.Usage = "HTTP -> AMQP proxy"
 	app.Version = fmt.Sprintf("%s (%s)", mithril.Version, mithril.Rev)
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "log-level, l",
+			Value: "info",
+			Usage: fmt.Sprintf("Log level (options: %s)", strings.Join(logLevelOptions, ",")),
+		},
+		cli.StringFlag{
+			Name:  "log-format, f",
+			Value: "text",
+			Usage: fmt.Sprintf("Log format (options: %s)", strings.Join(logFormatOptions, ",")),
+		},
+	}
 	app.Commands = []cli.Command{
 		{
 			Name:        "serve",
@@ -22,10 +65,14 @@ func main() {
 			Usage:       "start server",
 			Description: "Start the AMQP -> HTTP proxy server",
 			Action: func(c *cli.Context) {
+				err := initializeLogger(c)
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+
 				config := mithril.NewConfigurationFromContext(c)
 
-				log.Initialize(config.EnableDebug)
-				log.Println("Initializing Mithril...")
 				if server, err := mithril.NewServer(config); err != nil {
 					log.Fatal(err)
 				} else {
@@ -79,4 +126,20 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+func initializeLogger(c *cli.Context) (err error) {
+	level, ok := logLevels[c.GlobalString("log-level")]
+	if !ok {
+		return fmt.Errorf("invalid log level %s", c.GlobalString("log-level"))
+	}
+	log.SetLevel(level)
+
+	formatter, ok := logFormats[c.GlobalString("log-format")]
+	if !ok {
+		return fmt.Errorf("invalid log format %s", c.GlobalString("log-format"))
+	}
+	log.SetFormatter(formatter)
+
+	return nil
 }
