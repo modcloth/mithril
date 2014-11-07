@@ -131,7 +131,7 @@ func main() {
 					EnvVar: "MITHRIL_BIND",
 				},
 				cli.BoolTFlag{
-					Name:   "new-relic-enabled, E",
+					Name:   "new-relic-agent-enabled, E",
 					Usage:  "Enable the NewRelic agent",
 					EnvVar: "NEW_RELIC_AGENT_ENABLED",
 				},
