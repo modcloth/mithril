@@ -9,6 +9,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
 	"github.com/codegangsta/negroni"
+	"github.com/jingweno/negroni-gorelic"
 
 	"github.com/meatballhat/negroni-logrus"
 	"github.com/modcloth/mithril"
@@ -89,6 +90,18 @@ func main() {
 				}
 
 				n := negroni.New(negroni.NewRecovery(), negronilogrus.NewCustomMiddleware(level, formatter, "mithril"))
+
+				if c.GlobalBool("new-relic-agent-enabled") {
+					if c.GlobalString("new-relic-license-key") == "" {
+						log.Warn("newrelic license key is absent")
+					} else {
+						n.Use(negronigorelic.New(
+							c.GlobalString("new-relic-license-key"),
+							fmt.Sprintf("[%s] %s", c.GlobalString("new-relic-env"), "Mithril"),
+							c.GlobalBool("new-relic-verbose")))
+					}
+				}
+
 				n.UseHandler(mithril.NewServer(storer, amqp))
 				n.Run(c.String("bind"))
 			},
@@ -116,6 +129,26 @@ func main() {
 					Usage:  "The address to bind to",
 					Value:  ":8371",
 					EnvVar: "MITHRIL_BIND",
+				},
+				cli.BoolTFlag{
+					Name:   "new-relic-enabled, E",
+					Usage:  "Enable the NewRelic agent",
+					EnvVar: "NEW_RELIC_AGENT_ENABLED",
+				},
+				cli.StringFlag{
+					Name:   "new-relic-license-key, n",
+					Usage:  "New Relic License Key",
+					EnvVar: "NEW_RELIC_LICENSE_KEY",
+				},
+				cli.StringFlag{
+					Name:   "new-relic-env, e",
+					Usage:  "New Relic Env",
+					EnvVar: "NEW_RELIC_ENV",
+				},
+				cli.BoolFlag{
+					Name:   "new-relic-verbose, V",
+					Usage:  "New Relic Logging Level",
+					EnvVar: "NEW_RELIC_VERBOSE",
 				},
 			},
 		},

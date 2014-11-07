@@ -21,6 +21,10 @@
 			"Rev": "ae96f1c1ac9eb11be7dff4fe4cb42f6846b93d77"
 		},
 		{
+			"ImportPath": "github.com/jingweno/negroni-gorelic",
+			"Rev": "0547cdd62f4b911984d435279bd46b4d1a580823"
+		},
+		{
 			"ImportPath": "github.com/lib/pq",
 			"Rev": "7175accbed18058468c07811f76440d6e8d7cf19"
 		},
@@ -31,6 +35,19 @@
 		{
 			"ImportPath": "github.com/streadway/amqp",
 			"Rev": "6ffc9248c4b16699477e7411084c2402f2f0c351"
+		},
+		{
+			"ImportPath": "github.com/yvasiyarov/go-metrics",
+			"Rev": "57bccd1ccd43f94bb17fdd8bf3007059b802f85e"
+		},
+		{
+			"ImportPath": "github.com/yvasiyarov/gorelic",
+			"Comment": "v0.0.6-6-ged461c0",
+			"Rev": "ed461c0552ffe5e4bee53eb23c0edacc13c82555"
+		},
+		{
+			"ImportPath": "github.com/yvasiyarov/newrelic_platform_go",
+			"Rev": "b21fdbd4370f3717f3bbd2bf41c223bc273068e6"
 		}
 	]
 }
