@@ -25,6 +25,10 @@ func NewServer(storer *store.Storage, amqp *AMQPPublisher) *Server {
 func (me *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" || r.Method == "PUT" {
 		me.processMessage(w, r)
+	} else if r.URL.Path == "/heartbeat" {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, "pong\n")
 	} else {
 		me.respondErr(
 			fmt.Errorf(`Only "POST" and "PUT" are accepted, not %q`, r.Method),
