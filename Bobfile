@@ -1,0 +1,10 @@
+version = 1
+
+[[container]]
+name = "app"
+Dockerfile = "Dockerfile"
+registry = "modcloth"
+project = "mithril"
+tags = ["git:sha", "git:tag", "latest"]
+
+# vim:ft=toml
